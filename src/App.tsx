@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import OpenAI from "openai";
 import { Send, User, ChevronRight, ChevronLeft, Activity, Zap, Shield, Target, X, Trophy, Info, Image as ImageIcon, MessageSquare, MessageSquareOff, PlayCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import PongGame from "./components/PongGame";
 
 const PLAYERS: Record<string, { name: string; title: string; image: string; color: string; description: string; achievements: string[]; gallery: string[]; videoId: string; }> = {
   ma_long: {
@@ -136,6 +137,7 @@ export default function App() {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [isInputHidden, setIsInputHidden] = useState(false);
   const [isAvatarsExpanded, setIsAvatarsExpanded] = useState(false);
+  const [playingGameId, setPlayingGameId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -156,7 +158,7 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      const apiKey = import.meta.env.VITE_QWEN_API_KEY || "sk-1effd4996a96433a9cffa27f72633a31";
+      const apiKey = import.meta.env.VITE_QWEN_API_KEY || "";
       const openai = new OpenAI({ 
         apiKey: apiKey,
         baseURL: `${window.location.origin}/api/dashscope/compatible-mode/v1`,
@@ -482,6 +484,15 @@ export default function App() {
                     <div className="badge-gold inline-block mt-1">
                       {PLAYERS[selectedPlayerId].title}
                     </div>
+                    <div className="mt-3">
+                      <button
+                        onClick={() => setPlayingGameId(selectedPlayerId)}
+                        className="px-4 py-1.5 bg-red-600/90 hover:bg-red-500 text-white text-xs font-bold rounded-full transition-all flex items-center gap-1.5 shadow-lg shadow-red-600/20 active:scale-95"
+                      >
+                        <Activity className="w-4 h-4" />
+                        下场切磋
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -592,6 +603,15 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Pong Game Modal */}
+      {playingGameId && PLAYERS[playingGameId] && (
+        <PongGame 
+          playerKey={playingGameId} 
+          playerName={PLAYERS[playingGameId].name}
+          onClose={() => setPlayingGameId(null)} 
+        />
+      )}
     </div>
   );
 }
