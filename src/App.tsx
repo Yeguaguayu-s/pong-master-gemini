@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import Groq from "groq-sdk";
-import { Send, User, ChevronRight, Activity, Zap, Shield, Target, X, Trophy, Info, Image as ImageIcon, MessageSquare, MessageSquareOff, PlayCircle } from "lucide-react";
+import { Send, User, ChevronRight, ChevronLeft, Activity, Zap, Shield, Target, X, Trophy, Info, Image as ImageIcon, MessageSquare, MessageSquareOff, PlayCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 const PLAYERS: Record<string, { name: string; title: string; image: string; color: string; description: string; achievements: string[]; gallery: string[]; videoId: string; }> = {
@@ -135,6 +135,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [isInputHidden, setIsInputHidden] = useState(false);
+  const [isAvatarsExpanded, setIsAvatarsExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -234,33 +235,57 @@ export default function App() {
           <div className="absolute top-0 right-10 w-64 h-64 bg-emerald-600 rounded-full blur-[100px]" />
           <div className="absolute -bottom-10 left-10 w-48 h-48 bg-blue-600 rounded-full blur-[80px]" />
         </div>
-        <div className="max-w-4xl mx-auto flex items-center justify-between relative">
-          <div>
-            <h1 className="text-2xl font-bold tracking-wider mb-1 flex items-center gap-3 text-blue-400">
-              <Target className="w-6 h-6 text-blue-500" />
-              PONG MASTER AI
+        <div className="max-w-4xl mx-auto flex items-center justify-between relative gap-2">
+          <div className="shrink-1 min-w-0">
+            <h1 className="text-base sm:text-2xl font-bold tracking-wider mb-0.5 sm:mb-1 flex items-center gap-2 sm:gap-3 text-blue-400">
+              <Target className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 shrink-0" />
+              <span className="truncate">PONG MASTER AI</span>
             </h1>
-            <p className="text-slate-400 text-sm italic">向顶级冠军请教技术、战术与心态</p>
+            <p className="text-slate-400 text-[10px] sm:text-sm italic truncate">向顶级冠军请教技术、战术与心态</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 justify-end shrink-0">
             <button
               onClick={() => setIsInputHidden(!isInputHidden)}
-              className="p-2 rounded-full glass-card hover:bg-slate-800 transition-colors text-slate-300"
+              className="p-1.5 sm:p-2 rounded-full glass-card hover:bg-slate-800 transition-colors text-slate-300 shrink-0"
               title={isInputHidden ? "显示输入框" : "隐藏输入框"}
             >
-              {isInputHidden ? <MessageSquare className="w-5 h-5" /> : <MessageSquareOff className="w-5 h-5" />}
+              {isInputHidden ? <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" /> : <MessageSquareOff className="w-4 h-4 sm:w-5 sm:h-5" />}
             </button>
-            <div className="hidden sm:flex items-center gap-2">
-              {Object.entries(PLAYERS).map(([id, p]) => (
-                <div
-                  key={id}
-                  onClick={() => setSelectedPlayerId(id)}
-                  className="w-8 h-8 rounded-full overflow-hidden border border-neutral-700 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-pointer"
-                  title={p.name}
-                >
-                  <img src={p.image} referrerPolicy="no-referrer" alt={p.name} className="w-full h-full object-cover" />
-                </div>
-              ))}
+            <div 
+              className={`flex items-center transition-all duration-300 ${isAvatarsExpanded ? 'gap-1.5' : 'gap-0'} sm:gap-2`}
+              onClick={() => {
+                if (window.innerWidth < 640) setIsAvatarsExpanded(!isAvatarsExpanded);
+              }}
+            >
+              {Object.entries(PLAYERS).map(([id, p]) => {
+                const isSelected = selectedPlayerId === id;
+                const isVisibleOnMobile = isAvatarsExpanded || isSelected || (!selectedPlayerId && id === Object.keys(PLAYERS)[0]);
+
+                return (
+                  <div
+                    key={id}
+                    onClick={(e) => {
+                      if (window.innerWidth >= 640 || isAvatarsExpanded) {
+                        e.stopPropagation();
+                        setSelectedPlayerId(id);
+                        if (window.innerWidth < 640) setIsAvatarsExpanded(false);
+                      }
+                    }}
+                    className={`
+                      w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-full overflow-hidden border transition-all cursor-pointer relative hover:z-10 hover:-translate-y-1
+                      ${isSelected ? 'border-blue-500 opacity-100 grayscale-0 ring-1 ring-blue-500' : 'border-neutral-700 opacity-60 grayscale'}
+                      ${isVisibleOnMobile ? 'block' : 'hidden'} sm:block
+                      sm:hover:grayscale-0 sm:hover:opacity-100
+                    `}
+                    title={p.name}
+                  >
+                    <img src={p.image} referrerPolicy="no-referrer" alt={p.name} className="w-full h-full object-cover" />
+                  </div>
+                );
+              })}
+              <div className="sm:hidden text-slate-400 ml-1 flex-shrink-0 cursor-pointer">
+                {isAvatarsExpanded ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              </div>
             </div>
           </div>
         </div>
