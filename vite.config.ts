@@ -18,10 +18,10 @@ export default defineConfig(({mode}) => {
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
       proxy: {
-        '/api/groq': {
-          target: 'https://api.groq.com',
+        '/api/dashscope': {
+          target: 'https://dashscope.aliyuncs.com',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api\/groq/, '/openai/v1')
+          rewrite: (path) => path.replace(/^\/api\/dashscope/, '')
         }
       }
     },

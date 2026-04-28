@@ -1,12 +1,6 @@
 {
   "rewrites": [
-    {
-      "source": "/api/groq/(.*)",
-      "destination": "https://api.groq.com/openai/v1/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/api/dashscope/:path*", "destination": "https://dashscope.aliyuncs.com/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
