@@ -1,5 +1,5 @@
-async function searchDuckDuckGo(query) {
-  const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query + ' youtube')}`;
+async function searchBilibili(query) {
+  const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query + ' site:bilibili.com/video/')}`;
   try {
     const res = await fetch(url, {
       headers: {
@@ -7,11 +7,10 @@ async function searchDuckDuckGo(query) {
       }
     });
     const text = await res.text();
-    const match = text.match(/v=([a-zA-Z0-9_-]{11})/g);
+    const match = text.match(/BV1[a-zA-Z0-9]{9}/g);
     if (match) {
-        // give unique ids
         const unique = [...new Set(match)];
-        console.log(query, unique.slice(0, 2));
+        console.log(query, unique.slice(0, 1));
     } else {
         console.log(query, "No matches found");
     }
@@ -21,12 +20,10 @@ async function searchDuckDuckGo(query) {
 }
 
 async function run() {
-  await searchDuckDuckGo("Ma Long highlights");
-  await searchDuckDuckGo("Fan Zhendong highlights");
-  await searchDuckDuckGo("Zhang Jike highlights");
-  await searchDuckDuckGo("Xu Xin highlights");
-  await searchDuckDuckGo("Wang Chuqin highlights");
-  await searchDuckDuckGo("Sun Yingsha highlights");
+  await searchBilibili("张继科 龙队 精彩");
+  await searchBilibili("许昕 蛇队 精彩");
+  await searchBilibili("王楚钦 大头 精彩");
+  await searchBilibili("孙颖莎 暴力 精彩");
 }
 
 run();

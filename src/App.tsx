@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { GoogleGenAI, Type } from "@google/genai";
+import Groq from "groq-sdk";
 import { Send, User, ChevronRight, Activity, Zap, Shield, Target, X, Trophy, Info, Image as ImageIcon, MessageSquare, MessageSquareOff, PlayCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -7,8 +7,8 @@ const PLAYERS: Record<string, { name: string; title: string; image: string; colo
   ma_long: {
     name: "马龙",
     title: "六边形战士 (Hexagon Warrior)",
-    image: "https://upload.wikimedia.org/wikipedia/commons/1/1b/Ma_Long_ATTC2017_29.jpeg",
-    color: "bg-blue-600",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Ma_Long_ATTC2017_29.jpeg/960px-Ma_Long_ATTC2017_29.jpeg",
+    color: "from-red-600/20 to-orange-600/20",
     description: "马龙是世界乒乓球历史上最伟大的运动员之一，首位集奥运会、世锦赛、世界杯、亚运会、亚锦赛、亚洲杯、巡回赛总决赛、全运会单打冠军于一身的超级全满贯男子选手。他的技术全面，正手杀伤力极大，战术素养极高。",
     achievements: [
       "2届奥运会男单冠军 (2016, 2020)",
@@ -16,17 +16,17 @@ const PLAYERS: Record<string, { name: string; title: string; image: string; colo
       "首位男子双圈大满贯得主"
     ],
     gallery: [
-      "https://upload.wikimedia.org/wikipedia/commons/5/5b/Mondial_Ping_-_Men%27s_Singles_-_Round_4_-_Ma_Long-Koki_Niwa_-_11.jpg",
-      "https://upload.wikimedia.org/wikipedia/commons/8/88/Ma_Long_Celebrating_in_2012_World_Team_Table_Tennis_Championships.jpg",
-      "https://upload.wikimedia.org/wikipedia/commons/d/da/Ma_Long_WTTC2016_1.jpg"
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Ma_Long_Celebrating_in_2012_World_Team_Table_Tennis_Championships.jpg/960px-Ma_Long_Celebrating_in_2012_World_Team_Table_Tennis_Championships.jpg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Mondial_Ping_-_Men%27s_Singles_-_Round_4_-_Ma_Long-Koki_Niwa_-_11.jpg/960px-Mondial_Ping_-_Men%27s_Singles_-_Round_4_-_Ma_Long-Koki_Niwa_-_11.jpg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Ma_Long_%26_Ma_Lin_WTTC2011.jpg/960px-Ma_Long_%26_Ma_Lin_WTTC2011.jpg"
     ],
-    videoId: "_3XVh1ZZLMQ"
+    videoId: "BV1G4411t7R2"
   },
   fan_zhendong: {
     name: "樊振东",
     title: "暴力熊猫 (Little Fatty)",
-    image: "https://upload.wikimedia.org/wikipedia/commons/9/90/ITTF_World_Tour_2017_German_Open_Fan_Zhendong_03.jpg",
-    color: "bg-red-600",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Fan_Zhendong_ATTC2017_13.jpeg/960px-Fan_Zhendong_ATTC2017_13.jpeg",
+    color: "from-blue-600/20 to-indigo-600/20",
     description: "樊振东以其极具破坏力的反手拧拉和惊人的中远台相持能力闻名世界。他的球风硬朗，击球质量极高，被誉为国乒新生代的绝对主力。",
     achievements: [
       "世乒赛男单冠军 (2021, 2023)",
@@ -34,17 +34,17 @@ const PLAYERS: Record<string, { name: string; title: string; image: string; colo
       "单打奥运会冠军 (2024)"
     ],
     gallery: [
-      "https://upload.wikimedia.org/wikipedia/commons/9/90/ITTF_World_Tour_2017_German_Open_Fan_Zhendong_03.jpg",
-      "https://upload.wikimedia.org/wikipedia/commons/5/53/Fan_Zhendong_ATTC2017_17.jpeg",
-      "https://upload.wikimedia.org/wikipedia/commons/5/5d/Fan_Zhendong_ATTC2017_13.jpeg"
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/ITTF_World_Tour_2017_German_Open_Fan_Zhendong_03.jpg/960px-ITTF_World_Tour_2017_German_Open_Fan_Zhendong_03.jpg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Fan_Zhendong_ATTC2017_17.jpeg/960px-Fan_Zhendong_ATTC2017_17.jpeg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Fan_Zhendong_ATTC2017_portrait.jpeg/960px-Fan_Zhendong_ATTC2017_portrait.jpeg"
     ],
-    videoId: "8bsk5c5nbSs"
+    videoId: "BV1LQQHBUEYM"
   },
   zhang_jike: {
     name: "张继科",
     title: "藏獒 (Imperial Tiger)",
-    image: "https://upload.wikimedia.org/wikipedia/commons/7/74/Mondial_Ping_-_Men%27s_Singles_-_Final_-_Zhang_Jike_vs_Wang_Hao_-_40.jpg",
-    color: "bg-orange-600",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Zhang_Jike_ATTC2017_12.jpeg/960px-Zhang_Jike_ATTC2017_12.jpeg",
+    color: "from-zinc-100/20 to-zinc-400/20",
     description: "张继科创造了445天最快大满贯的历史纪录。他的反手接发球霸王拧极具侵略性，心理素质极强，比赛中经常展现出“藏獒”般的血性。",
     achievements: [
       "445天最快大满贯纪录保持者",
@@ -52,17 +52,17 @@ const PLAYERS: Record<string, { name: string; title: string; image: string; colo
       "2届世乒赛男单冠军 (2011, 2013)"
     ],
     gallery: [
-      "https://upload.wikimedia.org/wikipedia/commons/8/87/Zhang_Jike_01.JPG",
-      "https://upload.wikimedia.org/wikipedia/commons/f/f4/Zhang_Jike_03.JPG",
-      "https://upload.wikimedia.org/wikipedia/commons/7/74/Mondial_Ping_-_Men%27s_Singles_-_Final_-_Zhang_Jike_vs_Wang_Hao_-_40.jpg"
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Mondial_Ping_-_Men%27s_Singles_-_Final_-_Zhang_Jike_vs_Wang_Hao_-_40.jpg/960px-Mondial_Ping_-_Men%27s_Singles_-_Final_-_Zhang_Jike_vs_Wang_Hao_-_40.jpg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Zhang_Jike_ATTC2017_392.jpeg/960px-Zhang_Jike_ATTC2017_392.jpeg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Zhang_Jike_ATTC2017_314.jpeg/960px-Zhang_Jike_ATTC2017_314.jpeg"
     ],
-    videoId: "e7RbGRwbknI"
+    videoId: "BV1yA411A7X3"
   },
   xu_xin: {
     name: "许昕",
     title: "人民艺术家 (X-Man)",
-    image: "https://upload.wikimedia.org/wikipedia/commons/5/57/Xu_Xin_2012.jpg",
-    color: "bg-emerald-600",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/ITTF_World_Tour_2017_German_Open_Xu_Xin_04.jpg/960px-ITTF_World_Tour_2017_German_Open_Xu_Xin_04.jpg",
+    color: "from-green-600/20 to-emerald-600/20",
     description: "许昕是当今乒坛极少数打到顶尖水平的直板选手之一。他拥有世界级正手爆冲能力、极大的跑动范围和出神入化的台内手感，常常打出令人惊叹的神仙球。",
     achievements: [
       "2届奥运会男团冠军 (2016, 2020)",
@@ -70,17 +70,17 @@ const PLAYERS: Record<string, { name: string; title: string; image: string; colo
       "多届世乒赛双打/混双冠军"
     ],
     gallery: [
-      "https://upload.wikimedia.org/wikipedia/commons/5/57/Xu_Xin_2012.jpg",
-      "https://upload.wikimedia.org/wikipedia/commons/6/69/Xu_Xin_WTTC2016_2.jpg",
-      "https://upload.wikimedia.org/wikipedia/commons/5/53/Xu_Xin_WTTC2016_3.jpg"
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Xu_Xin_2012.jpg/960px-Xu_Xin_2012.jpg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Xu_Xin_WTTC2014_2.jpg/960px-Xu_Xin_WTTC2014_2.jpg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Xu_Xin_WTTC2016_2.jpg/960px-Xu_Xin_WTTC2016_2.jpg"
     ],
-    videoId: "FYqUvrh6B-k"
+    videoId: "BV1Gg4y187QU"
   },
   wang_chuqin: {
     name: "王楚钦",
     title: "大头 (Big Head)",
-    image: "https://upload.wikimedia.org/wikipedia/commons/7/7d/Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Men%27s_Singles_Gold_Medal_Match_068_%28cropped%29.jpg",
-    color: "bg-purple-600",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Men%27s_Singles_Gold_Medal_Match_068_%28cropped%29.jpg/960px-Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Men%27s_Singles_Gold_Medal_Match_068_%28cropped%29.jpg",
+    color: "from-purple-600/20 to-pink-600/20",
     description: "王楚钦是目前世界排名第一的男单选手。作为左手将，他的打法非常现代，速度极快，衔接流畅，正反手实力均衡且极具杀伤力。",
     achievements: [
       "亚运会男单冠军 (2022)",
@@ -88,17 +88,17 @@ const PLAYERS: Record<string, { name: string; title: string; image: string; colo
       "世乒赛男双、混双冠军"
     ],
     gallery: [
-      "https://upload.wikimedia.org/wikipedia/commons/5/5d/Wang_Chuqin_ACTTC2016_1.jpeg",
-      "https://upload.wikimedia.org/wikipedia/commons/7/7d/Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Men%27s_Singles_Gold_Medal_Match_068_%28cropped%29.jpg",
-      "https://upload.wikimedia.org/wikipedia/commons/e/e7/Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Mixed_Final_Doubles_011.jpg"
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Wang_Chuqin_ACTTC2016_1.jpeg/960px-Wang_Chuqin_ACTTC2016_1.jpeg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Mixed_Final_Doubles_116.jpg/960px-Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Mixed_Final_Doubles_116.jpg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Mixed_Final_Doubles_107.jpg/960px-Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Mixed_Final_Doubles_107.jpg"
     ],
-    videoId: "-opvsho5hTk"
+    videoId: "BV1qw4m1Y7iR"
   },
   sun_yingsha: {
     name: "孙颖莎",
     title: "小魔王 (Little Demon King)",
-    image: "https://upload.wikimedia.org/wikipedia/commons/1/16/Sun_Yingsha.png",
-    color: "bg-pink-600",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Medal_Ceremonies_Women_092.jpg/960px-Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Medal_Ceremonies_Women_092.jpg",
+    color: "from-yellow-500/20 to-orange-500/20",
     description: "孙颖莎是目前世界排名第一的女单选手。她的技术特点鲜明，正手攻击性极强，具备“女子技术男性化”的特点，且在关键时刻拥有一颗大心脏。",
     achievements: [
       "世乒赛女单冠军 (2023)",
@@ -106,11 +106,11 @@ const PLAYERS: Record<string, { name: string; title: string; image: string; colo
       "亚运会女单冠军 (2022)"
     ],
     gallery: [
-      "https://upload.wikimedia.org/wikipedia/commons/4/49/Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Medal_Ceremonies_Women_092.jpg",
-      "https://upload.wikimedia.org/wikipedia/commons/7/78/Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Medal_Ceremonies_Women_105.jpg",
-      "https://upload.wikimedia.org/wikipedia/commons/f/f6/Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Medal_Ceremonies_Women_115.jpg"
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Medal_Ceremonies_Women_115.jpg/960px-Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Medal_Ceremonies_Women_115.jpg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Medal_Ceremonies_Women_167.jpg/960px-Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Medal_Ceremonies_Women_167.jpg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Medal_Ceremonies_Women_109.jpg/960px-Table_tennis_at_the_2018_Summer_Youth_Olympics_%E2%80%93_Medal_Ceremonies_Women_109.jpg"
     ],
-    videoId: "q2rOgEhybts"
+    videoId: "BV1YUSDBxETS"
   },
 };
 
@@ -155,12 +155,17 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: `User asking about table tennis: ${userMsg.content}`,
-        config: {
-          systemInstruction: `你是世界顶级的乒乓球教学系统。当用户提出技术、战术或心理问题时，你必须选择最合适回答该问题的中国国家队球员（ma_long, fan_zhendong, zhang_jike, xu_xin, wang_chuqin, sun_yingsha 中选一个）。
+      const groq = new Groq({ 
+        apiKey: process.env.GROQ_API_KEY,
+        dangerouslyAllowBrowser: true,
+      });
+
+      const response = await groq.chat.completions.create({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          {
+            role: "system",
+            content: `你是世界顶级的乒乓球教学系统。当用户提出技术、战术或心理问题时，你必须选择最合适回答该问题的中国国家队球员（ma_long, fan_zhendong, zhang_jike, xu_xin, wang_chuqin, sun_yingsha 中选一个）。
           
           选择逻辑：
           - 马龙 (ma_long)：正手技术、全面性、控制流、战术套路、比赛阅读。
@@ -170,27 +175,26 @@ export default function App() {
           - 王楚钦 (wang_chuqin)：左手优势、速度、现代打法、衔接快。
           - 孙颖莎 (sun_yingsha)：女子技术男性化、正手连续进攻、前三板快狠。
           
-          请完全代入该球员的第一人称（“我”）来回答。语气要符合他们的性格。保证回答专业、细致，有实际操作价值。包含详细的动作演示描述。`,
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              playerId: { type: Type.STRING, description: "选定球员的ID" },
-              personalityGreeting: { type: Type.STRING, description: "符合球员性格的开场白（第一人称）" },
-              tacticalAdvice: { type: Type.STRING, description: "详细的技术或战术建议（第一人称）" },
-              actionDemonstration: { type: Type.STRING, description: "动作要领及发力机制（仿佛在做动作示范）" },
-              focusPoints: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: "列出3个核心技术要点",
-              },
-            },
-            required: ["playerId", "personalityGreeting", "tacticalAdvice", "actionDemonstration", "focusPoints"],
+          请完全代入该球员的第一人称（“我”）来回答。语气要符合他们的性格。保证回答专业、细致，有实际操作价值。包含详细的动作演示描述。
+
+          必须返回且仅返回以下完全合法的JSON格式（CRITICAL: 必须是合法的JSON对象格式。绝对不要使用单引号，所有字符串必须用双引号包围。字符串内部的换行请使用转义字符 \\n，或者直接写成一段话不要换行。不要包含任何Markdown，例如\`\`\`json等）：
+          {
+            "playerId": "选定球员的ID（必须是：ma_long/fan_zhendong/zhang_jike/xu_xin/wang_chuqin/sun_yingsha）",
+            "personalityGreeting": "符合球员性格的开场白（第一人称）",
+            "tacticalAdvice": "详细的技术或战术建议（第一人称）",
+            "actionDemonstration": "动作要领及发力机制（仿佛在做动作示范）",
+            "focusPoints": ["要点1", "要点2", "要点3"]
+          }`
           },
-        },
+          {
+            role: "user",
+            content: `User asking about table tennis: ${userMsg.content}`
+          }
+        ],
+        response_format: { type: "json_object" },
       });
 
-      const jsonStr = response.text?.trim() || "{}";
+      const jsonStr = response.choices[0]?.message?.content?.trim() || "{}";
       const data = JSON.parse(jsonStr) as AnswerDetails;
 
       const sysMsg: Message = {
@@ -200,12 +204,19 @@ export default function App() {
         details: data,
       };
       setMessages((prev) => [...prev, sysMsg]);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      let errorMsgContent = "系统遇到问题，请稍后重试或检查 API Key设置。";
+      if (error?.error?.code === "json_validate_failed") {
+        errorMsgContent = "AI返回的数据格式有误，请重新尝试提问。";
+      } else if (error?.message) {
+        errorMsgContent = `系统遇到问题: ${error.message}`;
+      }
+
       const errMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: "system",
-        content: "系统遇到问题，请稍后重试或检查 API Key设置。",
+        content: errorMsgContent,
       };
       setMessages((prev) => [...prev, errMsg]);
     } finally {
@@ -486,7 +497,7 @@ export default function App() {
                     <iframe
                       width="100%"
                       height="100%"
-                      src={`https://www.youtube.com/embed/${PLAYERS[selectedPlayerId].videoId}`}
+                      src={`//player.bilibili.com/player.html?bvid=${PLAYERS[selectedPlayerId].videoId}&page=1&high_quality=1&danmaku=0`}
                       title={`${PLAYERS[selectedPlayerId].name} Highlights`}
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -548,7 +559,7 @@ export default function App() {
           </button>
             </form>
             <p className="text-center text-xs text-slate-500 mt-4 mb-2 italic">
-              PONG MASTER AI - 由 Gemini 驱动的战术分析系统
+              PONG MASTER AI - 由 Groq (Llama 3) 驱动的战术分析系统
             </p>
           </motion.div>
         )}
@@ -556,4 +567,3 @@ export default function App() {
     </div>
   );
 }
-
