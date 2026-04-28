@@ -138,6 +138,7 @@ export default function App() {
   const [isInputHidden, setIsInputHidden] = useState(false);
   const [isAvatarsExpanded, setIsAvatarsExpanded] = useState(false);
   const [playingGameId, setPlayingGameId] = useState<string | null>(null);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -284,7 +285,7 @@ export default function App() {
                     `}
                     title={p.name}
                   >
-                    <img src={p.image} referrerPolicy="no-referrer" alt={p.name} className="w-full h-full object-cover" />
+                    <img src={p.image} referrerPolicy="no-referrer" alt={p.name} className="w-full h-full object-cover object-top" />
                   </div>
                 );
               })}
@@ -349,7 +350,7 @@ export default function App() {
                                   src={PLAYERS[msg.details.playerId]?.image || "https://cravatar.cn/avatar/default?d=identicon&s=200"}
                                   alt={msg.details.playerId}
                                   referrerPolicy="no-referrer"
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-cover object-top"
                                   onError={(e) => {
                                       // Fallback logic for broken wiki images
                                       (e.target as HTMLImageElement).src = `https://cravatar.cn/avatar/${encodeURIComponent(PLAYERS[msg.details.playerId]?.name || 'Player')}?d=identicon&s=200`;
@@ -469,12 +470,15 @@ export default function App() {
                   <X className="w-5 h-5" />
                 </button>
                 <div className="absolute -bottom-12 left-6 flex items-end gap-4 scale-90 sm:scale-100 origin-bottom-left">
-                  <div className="w-24 h-24 rounded-2xl overflow-hidden border border-white/20 bg-slate-800 shadow-xl">
+                  <div 
+                    className="w-24 h-24 rounded-2xl overflow-hidden border border-white/20 bg-slate-800 shadow-xl cursor-pointer hover:ring-2 hover:ring-white/50 transition-all"
+                    onClick={() => setExpandedImage(PLAYERS[selectedPlayerId].image)}
+                  >
                     <img
                       src={PLAYERS[selectedPlayerId].image}
                       alt={PLAYERS[selectedPlayerId].name}
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover object-top"
                     />
                   </div>
                   <div className="mb-2">
@@ -553,12 +557,16 @@ export default function App() {
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {PLAYERS[selectedPlayerId].gallery.map((img, idx) => (
-                      <div key={idx} className="aspect-square rounded-xl overflow-hidden glass-card p-0 shadow-sm group">
+                      <div 
+                        key={idx} 
+                        className="aspect-square rounded-xl overflow-hidden glass-card p-0 shadow-sm group cursor-pointer border border-white/5 hover:border-white/20 transition-colors"
+                        onClick={() => setExpandedImage(img)}
+                      >
                         <img
                           src={img}
                           alt="Gallery"
                           referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
                         />
                       </div>
                     ))}
@@ -612,6 +620,36 @@ export default function App() {
           onClose={() => setPlayingGameId(null)} 
         />
       )}
+
+      {/* Image Lightbox Modal */}
+      <AnimatePresence>
+        {expandedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+            onClick={() => setExpandedImage(null)}
+          >
+            <button
+              onClick={() => setExpandedImage(null)}
+              className="absolute right-6 top-6 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <motion.img
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              src={expandedImage}
+              alt="Expanded view"
+              referrerPolicy="no-referrer"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
