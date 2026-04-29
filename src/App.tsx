@@ -139,7 +139,8 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [isInputHidden, setIsInputHidden] = useState(false);
-  const [isAvatarsExpanded, setIsAvatarsExpanded] = useState(false);
+  const [isHeaderAvatarsExpanded, setIsHeaderAvatarsExpanded] = useState(false);
+  const [isBottomAvatarsExpanded, setIsBottomAvatarsExpanded] = useState(false);
   const [playingGameId, setPlayingGameId] = useState<string | null>(null);
   const [selectedChatPlayerIds, setSelectedChatPlayerIds] = useState<string[]>([]);
   const [autoMatchMode, setAutoMatchMode] = useState<'single' | 'multi'>('single');
@@ -274,29 +275,30 @@ export default function App() {
           <div className="flex items-center gap-2 sm:gap-4 justify-end shrink-0">
             <button
               onClick={() => setIsInputHidden(!isInputHidden)}
-              className="p-1.5 sm:p-2 rounded-full glass-card hover:bg-slate-800 transition-colors text-slate-300 shrink-0"
-              title={isInputHidden ? "显示输入框" : "隐藏输入框"}
+              className={`p-1 px-2 sm:p-2 sm:px-2 rounded-full glass-card transition-all duration-300 shrink-0 flex items-center gap-1.5 border ${!isInputHidden ? 'bg-blue-600/20 border-blue-500/50 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-slate-800/40 border-white/5 text-slate-500 hover:text-slate-300'}`}
+              title={isInputHidden ? "显示对话框" : "隐藏对话框"}
             >
-              {isInputHidden ? <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" /> : <MessageSquareOff className="w-4 h-4 sm:w-5 sm:h-5" />}
+              <MessageSquare className={`w-4 h-4 sm:w-5 sm:h-5 ${!isInputHidden ? 'text-blue-400' : 'text-slate-500'}`} />
+              <span className={`text-[10px] hidden sm:inline uppercase tracking-tighter font-bold ${!isInputHidden ? 'text-blue-400' : 'text-slate-500'}`}>Chat</span>
             </button>
             <div 
-              className={`flex items-center transition-all duration-300 ${isAvatarsExpanded ? 'gap-1.5' : 'gap-0'} sm:gap-2`}
+              className={`flex items-center transition-all duration-300 ${isHeaderAvatarsExpanded ? 'gap-1' : 'gap-0'} sm:gap-1.5`}
               onClick={() => {
-                if (window.innerWidth < 640) setIsAvatarsExpanded(!isAvatarsExpanded);
+                if (window.innerWidth < 640) setIsHeaderAvatarsExpanded(!isHeaderAvatarsExpanded);
               }}
             >
               {Object.entries(PLAYERS).map(([id, p]) => {
                 const isSelected = selectedPlayerId === id;
-                const isVisibleOnMobile = isAvatarsExpanded || isSelected || (!selectedPlayerId && id === Object.keys(PLAYERS)[0]);
+                const isVisibleOnMobile = isHeaderAvatarsExpanded || isSelected || (!selectedPlayerId && id === Object.keys(PLAYERS)[0]);
 
                 return (
                   <div
                     key={id}
                     onClick={(e) => {
-                      if (window.innerWidth >= 640 || isAvatarsExpanded) {
+                      if (window.innerWidth >= 640 || isHeaderAvatarsExpanded) {
                         e.stopPropagation();
                         setSelectedPlayerId(id);
-                        if (window.innerWidth < 640) setIsAvatarsExpanded(false);
+                        if (window.innerWidth < 640) setIsHeaderAvatarsExpanded(false);
                       }
                     }}
                     className={`
@@ -312,7 +314,7 @@ export default function App() {
                 );
               })}
               <div className="sm:hidden text-slate-400 ml-1 flex-shrink-0 cursor-pointer">
-                {isAvatarsExpanded ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                {isHeaderAvatarsExpanded ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
               </div>
             </div>
           </div>
@@ -320,7 +322,7 @@ export default function App() {
       </header>
 
       {/* Main Chat Area */}
-      <main className={`flex-1 overflow-y-auto p-4 sm:p-6 ${!isInputHidden ? (isAvatarsExpanded ? 'pb-80' : 'pb-60') : 'pb-8'} space-y-8 scroll-smooth z-10`}>
+      <main className={`flex-1 overflow-y-auto p-4 sm:p-6 ${!isInputHidden ? (isBottomAvatarsExpanded ? 'pb-80' : 'pb-60') : 'pb-8'} space-y-8 scroll-smooth z-10`}>
         <div className="max-w-4xl mx-auto">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full min-h-[40vh] text-center pt-20">
@@ -331,15 +333,15 @@ export default function App() {
               <p className="text-slate-400 max-w-md mx-auto mb-8 text-sm italic">
                 描述你遇到的问题，系统会自动匹配最擅长该技术的国乒冠军为你解答。
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <button onClick={() => handleSuggestionClick("我的反手拧拉总是吃旋转，起不来下旋球怎么办？")} className="px-4 py-2 glass-card hover:bg-slate-800/80 rounded-full text-sm transition-colors text-slate-300 hover:text-white">
-                  教学：反手拧拉下旋球技巧
+              <div className="flex sm:flex-wrap items-center justify-start sm:justify-center gap-3 overflow-x-auto sm:overflow-x-visible pb-4 sm:pb-0 px-4 sm:px-0 scrollbar-hide no-scrollbar -mx-4 sm:mx-0">
+                <button onClick={() => handleSuggestionClick("我的反手拧拉总是吃旋转，起不来下旋球怎么办？")} className="whitespace-nowrap px-4 py-2 glass-card hover:bg-slate-800/80 rounded-full text-xs sm:text-sm transition-colors text-slate-300 hover:text-white shrink-0">
+                  反手拧拉技巧
                 </button>
-                <button onClick={() => handleSuggestionClick("正手拉加转弧圈球总是发不上力，身体不够协调。")} className="px-4 py-2 glass-card hover:bg-slate-800/80 rounded-full text-sm transition-colors text-slate-300 hover:text-white">
-                  教学：提升正手加转弧圈发力
+                <button onClick={() => handleSuggestionClick("正手拉加转弧圈球总是发不上力，身体不够协调。")} className="whitespace-nowrap px-4 py-2 glass-card hover:bg-slate-800/80 rounded-full text-xs sm:text-sm transition-colors text-slate-300 hover:text-white shrink-0">
+                  正手爆冲发力
                 </button>
-                <button onClick={() => handleSuggestionClick("比赛到了决胜局关键分，总是不敢出手，怎么练心态？")} className="px-4 py-2 glass-card hover:bg-slate-800/80 rounded-full text-sm transition-colors text-slate-300 hover:text-white">
-                  心理：决胜局关键球心态
+                <button onClick={() => handleSuggestionClick("比赛到了决胜局关键分，总是不敢出手，怎么练心态？")} className="whitespace-nowrap px-4 py-2 glass-card hover:bg-slate-800/80 rounded-full text-xs sm:text-sm transition-colors text-slate-300 hover:text-white shrink-0">
+                  决胜局心理素质
                 </button>
               </div>
             </div>
@@ -354,31 +356,31 @@ export default function App() {
                     className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     {msg.role === "user" ? (
-                      <div className="glass-card text-white px-6 py-4 rounded-3xl rounded-tr-sm max-w-[85%] sm:max-w-[70%] shadow-lg border border-slate-700">
-                        <p className="leading-relaxed">{msg.content}</p>
+                      <div className="glass-card text-white px-4 py-3 sm:px-6 sm:py-4 rounded-2xl rounded-tr-sm max-w-[90%] sm:max-w-[70%] shadow-lg border border-slate-700/50">
+                        <p className="leading-relaxed text-sm sm:text-base">{msg.content}</p>
                       </div>
                     ) : (
-                      <div className="w-full max-w-3xl flex gap-4 sm:gap-6">
+                      <div className="w-full max-w-3xl flex gap-3 sm:gap-6">
                         {!msg.details ? (
-                          <div className="bg-blue-900/20 text-blue-400 px-6 py-4 rounded-3xl rounded-tl-sm border border-blue-900/50 flex-1">
+                          <div className="bg-blue-900/20 text-blue-400 px-5 py-3 sm:px-6 sm:py-4 rounded-2xl rounded-tl-sm border border-blue-900/50 flex-1 text-sm sm:text-base">
                             {msg.content}
                           </div>
                         ) : (
-                          <div className="flex-1 w-full space-y-10">
+                          <div className="flex-1 w-full space-y-8 sm:space-y-10 text-left">
                             {msg.details.map((detail, dIdx) => (
                               <div key={`${detail.playerId}-${dIdx}`} className="space-y-6 relative">
                                 {msg.details!.length > 1 && (
-                                  <div className="absolute -left-10 top-10 flex flex-col items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold border-2 border-[#020617] shadow-lg">
+                                  <div className="absolute -left-2 sm:-left-10 -top-2 sm:top-10 flex flex-col items-center gap-2 z-10">
+                                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-600 flex items-center justify-center text-[10px] sm:text-xs font-bold border-2 border-[#020617] shadow-lg text-white">
                                       {dIdx + 1}
                                     </div>
-                                    <div className="w-0.5 h-full bg-gradient-to-b from-blue-600/50 to-transparent absolute top-8 -z-10" />
+                                    <div className="hidden sm:block w-0.5 h-full bg-gradient-to-b from-blue-600/50 to-transparent absolute top-8 -z-10" />
                                   </div>
                                 )}
                                 
                                 {/* Player Card header */}
-                                <div className="flex items-center gap-4 glass-card p-6 border-white/5 bg-slate-900/40">
-                                  <div className={`w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl overflow-hidden border border-white/20 shadow-[0_0_15px_rgba(0,0,0,0.5)]`}>
+                                <div className="flex items-center gap-2 sm:gap-4 glass-card p-3 sm:p-6 border-white/5 bg-slate-900/40">
+                                  <div className={`w-12 h-12 sm:w-20 sm:h-20 shrink-0 rounded-xl overflow-hidden border border-white/10 shadow-lg`}>
                                     <img
                                       src={PLAYERS[detail.playerId]?.image || "https://cravatar.cn/avatar/default?d=identicon&s=200"}
                                       alt={detail.playerId}
@@ -389,53 +391,55 @@ export default function App() {
                                       }}
                                     />
                                   </div>
-                                  <div>
-                                    <h3 className="text-xl font-bold tracking-tight flex items-center gap-2 uppercase italic text-slate-100">
-                                      {PLAYERS[detail.playerId]?.name || "神秘名将"}
-                                      <span className="badge-gold">
-                                        {PLAYERS[detail.playerId]?.title || "指导教练"}
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                      <h3 className="text-base sm:text-xl font-bold tracking-tight uppercase italic text-slate-100 truncate">
+                                        {PLAYERS[detail.playerId]?.name || "神秘名将"}
+                                      </h3>
+                                      <span className="badge-gold self-start sm:self-auto px-1.5 py-0.5 leading-none">
+                                        {PLAYERS[detail.playerId]?.title.split('(')[0].trim() || "导师"}
                                       </span>
-                                    </h3>
-                                    <p className="text-slate-400 italic mt-2 font-serif text-sm">
+                                    </div>
+                                    <p className="text-slate-400 italic mt-1 font-serif text-[10px] sm:text-sm line-clamp-1 sm:line-clamp-2">
                                       "{detail.personalityGreeting}"
                                     </p>
                                   </div>
                                 </div>
 
                                 {/* Content Blocks */}
-                                <div className="space-y-6">
-                                  <div className="glass-card p-6 border-l-4 border-l-amber-500 border-white/10 shadow-sm">
-                                    <h4 className="flex items-center gap-2 font-bold mb-4 text-amber-500 tracking-widest text-xs uppercase">
-                                      <Activity className="w-4 h-4" />
-                                      {PLAYERS[detail.playerId]?.name} 的见解 Insight
+                                <div className="space-y-3 sm:space-y-6">
+                                  <div className="glass-card p-4 sm:p-6 border-l-2 sm:border-l-4 border-l-amber-500 border-white/10 shadow-sm transition-all hover:bg-white/[0.02]">
+                                    <h4 className="flex items-center gap-2 font-bold mb-2 sm:mb-4 text-amber-500 tracking-widest text-[9px] sm:text-xs uppercase">
+                                      <Activity className="w-3 h-3 sm:w-4 sm:h-4" />
+                                      {PLAYERS[detail.playerId]?.name} 的见解
                                     </h4>
-                                    <p className="leading-relaxed text-slate-200">
+                                    <p className="leading-relaxed text-slate-200 text-xs sm:text-base">
                                       {detail.tacticalAdvice}
                                     </p>
                                   </div>
 
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                                    <div className="glass-card p-6 relative overflow-hidden group">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
+                                    <div className="glass-card p-4 sm:p-6 relative overflow-hidden group hover:bg-white/[0.02] transition-colors">
                                       <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-transparent pointer-events-none" />
-                                      <h4 className="flex items-center gap-2 font-bold mb-4 text-slate-500 text-xs uppercase">
-                                        <Zap className="w-4 h-4" />
-                                        动作轨迹 Demo
+                                      <h4 className="flex items-center gap-2 font-bold mb-2 sm:mb-4 text-slate-500 text-[9px] sm:text-xs uppercase">
+                                        <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        动作轨迹
                                       </h4>
-                                      <p className="text-sm leading-relaxed text-slate-300 relative z-10">
+                                      <p className="text-[11px] sm:text-sm leading-relaxed text-slate-300 relative z-10">
                                         {detail.actionDemonstration}
                                       </p>
                                     </div>
-
-                                    <div className="glass-card p-6 bg-slate-900">
-                                      <h4 className="flex items-center gap-2 font-bold mb-4 text-blue-400 text-xs uppercase">
-                                        <Shield className="w-4 h-4" />
-                                        核心要点 Checklist
+                                    
+                                    <div className="glass-card p-4 sm:p-6 bg-slate-900/50 hover:bg-slate-800/80 transition-colors shadow-inner border-white/5">
+                                      <h4 className="flex items-center gap-2 font-bold mb-2 sm:mb-4 text-blue-400 text-[9px] sm:text-xs uppercase">
+                                        <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        核心要点
                                       </h4>
-                                      <ul className="space-y-3">
+                                      <ul className="space-y-1.5 sm:space-y-3">
                                         {detail.focusPoints.map((point, idx) => (
-                                          <li key={idx} className="flex gap-3 text-sm text-slate-300 items-start">
-                                            <span className="shrink-0 flex items-center justify-center text-blue-400 text-xs mt-0.5">•</span>
-                                            <span className="leading-relaxed">{point}</span>
+                                          <li key={idx} className="flex gap-2 sm:gap-3 text-[11px] sm:text-sm text-slate-300 items-start">
+                                            <span className="shrink-0 flex items-center justify-center text-blue-500 text-[10px] mt-0.5">•</span>
+                                            <span className="leading-snug sm:leading-relaxed">{point}</span>
                                           </li>
                                         ))}
                                       </ul>
@@ -482,28 +486,34 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#020617]/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center sm:p-4 bg-[#020617]/95 backdrop-blur-xl"
             onClick={() => setSelectedPlayerId(null)}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: "100%" }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
               onClick={(e) => e.stopPropagation()}
-              className="glass-card bg-[#0f172a] shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              className="glass-card bg-[#0b1222] shadow-[0_0_100px_rgba(0,0,0,0.5)] w-full max-w-4xl overflow-hidden flex flex-col h-full sm:h-auto sm:max-h-[92vh] border-white/5 sm:rounded-3xl rounded-none"
             >
-              {/* Modal Header */}
-              <div className="relative h-48 bg-slate-900 border-b border-white/10 shrink-0">
-                <div className="absolute inset-0 bg-blue-500/10 mix-blend-screen" />
+              {/* Modal Header/Hero Area */}
+              <div className="relative min-h-[320px] sm:h-72 shrink-0 overflow-hidden">
+                <div className={`absolute inset-0 bg-gradient-to-br ${PLAYERS[selectedPlayerId].color} opacity-60`} />
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
+                
+                <div className="absolute inset-0 bg-black/40 sm:hidden" />
+                
                 <button
                   onClick={() => setSelectedPlayerId(null)}
-                  className="absolute right-4 top-4 z-10 w-8 h-8 rounded-full bg-slate-900/50 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-colors border border-white/10"
+                  className="absolute right-4 top-4 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-all border border-white/10 backdrop-blur-xl shadow-lg"
                 >
                   <X className="w-5 h-5" />
                 </button>
-                <div className="absolute -bottom-12 left-6 flex items-end gap-4 scale-90 sm:scale-100 origin-bottom-left">
+
+                <div className="absolute bottom-0 left-0 w-full p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 bg-gradient-to-t from-[#0b1222] via-[#0b1222]/90 to-transparent">
                   <div 
-                    className="w-24 h-24 rounded-2xl overflow-hidden border border-white/20 bg-slate-800 shadow-xl cursor-pointer hover:ring-2 hover:ring-white/50 transition-all"
+                    className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl overflow-hidden border-2 border-white/20 bg-slate-800 shadow-2xl cursor-pointer hover:border-white/50 transition-all transform hover:scale-105 shrink-0"
                     onClick={() => setExpandedImage(PLAYERS[selectedPlayerId].image)}
                   >
                     <img
@@ -513,97 +523,126 @@ export default function App() {
                       className="w-full h-full object-cover object-top"
                     />
                   </div>
-                  <div className="mb-2">
-                    <h2 className="text-2xl font-black italic uppercase text-slate-50 tracking-wider">
-                      {PLAYERS[selectedPlayerId].name}
-                    </h2>
-                    <div className="badge-gold inline-block mt-1">
-                      {PLAYERS[selectedPlayerId].title}
+                  <div className="text-center sm:text-left pb-1 flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-center sm:justify-start gap-1 sm:gap-4 mb-1.5 sm:mb-2">
+                      <h2 className="text-2xl sm:text-4xl font-black italic tracking-tighter text-white drop-shadow-2xl truncate">
+                        {PLAYERS[selectedPlayerId].name}
+                      </h2>
+                      <span className="badge-gold self-center sm:self-auto py-0.5 sm:py-1 px-2 sm:px-3 glass-card bg-amber-500/10 border-amber-500/40 text-amber-500 text-[9px] sm:text-xs">
+                        {PLAYERS[selectedPlayerId].title}
+                      </span>
                     </div>
-                    <div className="mt-3">
-                      <button
-                        onClick={() => setPlayingGameId(selectedPlayerId)}
-                        className="px-4 py-1.5 bg-red-600/90 hover:bg-red-500 text-white text-xs font-bold rounded-full transition-all flex items-center gap-1.5 shadow-lg shadow-red-600/20 active:scale-95"
-                      >
-                        <Activity className="w-4 h-4" />
-                        下场切磋
-                      </button>
-                    </div>
+                    <p className="text-slate-400 text-[11px] sm:text-sm max-w-lg line-clamp-1 sm:line-clamp-2 italic mb-3 sm:mb-4">
+                      {PLAYERS[selectedPlayerId].description.split('。')[0]}。
+                    </p>
+                    <button
+                      onClick={() => setPlayingGameId(selectedPlayerId)}
+                      className="px-6 sm:px-8 py-2 sm:py-2.5 bg-red-600 hover:bg-red-500 text-white text-xs sm:text-sm font-black rounded-xl transition-all flex items-center justify-center gap-2 shadow-xl shadow-red-600/30 active:scale-95 group/btn mx-auto sm:mx-0 w-full sm:w-auto"
+                    >
+                      <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover/btn:animate-pulse" />
+                      立即切磋挑战
+                    </button>
                   </div>
                 </div>
               </div>
 
-              {/* Modal Body */}
-              <div className="p-6 pt-16 overflow-y-auto space-y-8 flex-1">
-                {/* Intro */}
-                <div>
-                  <h3 className="flex items-center gap-2 font-bold text-blue-400 text-xs uppercase tracking-widest mb-3">
-                    <Info className="w-4 h-4" />
-                    球员简介
-                  </h3>
-                  <p className="text-slate-300 leading-relaxed text-sm">
-                    {PLAYERS[selectedPlayerId].description}
-                  </p>
-                </div>
-
-                {/* Achievements */}
-                <div>
-                  <h3 className="flex items-center gap-2 font-bold text-amber-500 text-xs uppercase tracking-widest mb-3">
-                    <Trophy className="w-4 h-4" />
-                    历史成绩
-                  </h3>
-                  <ul className="grid sm:grid-cols-2 gap-3">
-                    {PLAYERS[selectedPlayerId].achievements.map((ach, idx) => (
-                      <li key={idx} className="glass-card bg-slate-900 shadow-none border-white/5 py-3 px-4 rounded-xl flex items-start sm:items-center gap-3 text-sm text-slate-200">
-                        <div className="w-2 h-2 shrink-0 rounded-full bg-amber-500 mt-1.5 sm:mt-0" />
-                        <span className="leading-tight">{ach}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Video Demonstration */}
-                <div>
-                  <h3 className="flex items-center gap-2 font-bold text-red-500 text-xs uppercase tracking-widest mb-3">
-                    <PlayCircle className="w-4 h-4" />
-                    实战演示
-                  </h3>
-                  <div className="aspect-video rounded-xl overflow-hidden glass-card p-0 shadow-sm">
-                    <iframe
-                      width="100%"
-                      height="100%"
-                      src={`//player.bilibili.com/player.html?bvid=${PLAYERS[selectedPlayerId].videoId}&page=1&high_quality=1&danmaku=0`}
-                      title={`${PLAYERS[selectedPlayerId].name} Highlights`}
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    ></iframe>
-                  </div>
-                </div>
-
-                {/* Grid Gallery */}
-                <div>
-                  <h3 className="flex items-center gap-2 font-bold text-emerald-400 text-xs uppercase tracking-widest mb-3">
-                    <ImageIcon className="w-4 h-4" />
-                    风采展示
-                  </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {PLAYERS[selectedPlayerId].gallery.map((img, idx) => (
-                      <div 
-                        key={idx} 
-                        className="aspect-square rounded-xl overflow-hidden glass-card p-0 shadow-sm group cursor-pointer border border-white/5 hover:border-white/20 transition-colors"
-                        onClick={() => setExpandedImage(img)}
-                      >
-                        <img
-                          src={img}
-                          alt="Gallery"
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
-                        />
+              {/* Modal Content Scroll Area */}
+              <div className="flex-1 overflow-y-auto p-5 sm:p-8 no-scrollbar">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8">
+                  {/* Left Column: Stats & Achievements */}
+                  <div className="lg:col-span-2 space-y-8">
+                    <section>
+                      <h3 className="flex items-center gap-2 font-black text-blue-400 text-[10px] uppercase tracking-[0.2em] mb-4">
+                        <Info className="w-4 h-4" />
+                        球员自传 Profile
+                      </h3>
+                      <div className="glass-card bg-white/[0.02] p-5 border-white/5 leading-relaxed text-slate-300 text-sm italic font-serif">
+                        {PLAYERS[selectedPlayerId].description}
                       </div>
-                    ))}
+                    </section>
+
+                    <section>
+                      <h3 className="flex items-center gap-2 font-black text-amber-500 text-[10px] uppercase tracking-[0.2em] mb-4">
+                        <Trophy className="w-4 h-4" />
+                        巅峰荣誉 Honors
+                      </h3>
+                      <div className="space-y-3">
+                        {PLAYERS[selectedPlayerId].achievements.map((ach, idx) => (
+                          <div key={idx} className="flex items-center gap-3 p-4 glass-card bg-gradient-to-r from-amber-500/5 to-transparent border-white/5 hover:border-amber-500/20 transition-colors group/honor">
+                            <div className="w-8 h-8 shrink-0 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover/honor:scale-110 transition-transform">
+                              <Trophy className="w-4 h-4 text-amber-500" />
+                            </div>
+                            <span className="text-sm font-medium text-slate-200">{ach}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  </div>
+
+                  {/* Right Column: Demo & Photos */}
+                  <div className="lg:col-span-3 space-y-8">
+                    <section>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="flex items-center gap-2 font-black text-red-500 text-[10px] uppercase tracking-[0.2em]">
+                          <PlayCircle className="w-4 h-4" />
+                          实战演示 Video Demo
+                        </h3>
+                        <span className="text-[9px] text-slate-500 font-mono flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                          HD 1080P
+                        </span>
+                      </div>
+                      <div className="aspect-video rounded-2xl overflow-hidden glass-card p-0 shadow-2xl border-2 border-white/5 group/video relative">
+                        <iframe
+                          width="100%"
+                          height="100%"
+                          src={`//player.bilibili.com/player.html?bvid=${PLAYERS[selectedPlayerId].videoId}&page=1&high_quality=1&danmaku=0&autoplay=0`}
+                          title={`${PLAYERS[selectedPlayerId].name} Highlights`}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="opacity-90 group-hover/video:opacity-100 transition-opacity"
+                        ></iframe>
+                      </div>
+                    </section>
+
+                    <section>
+                      <h3 className="flex items-center gap-2 font-black text-emerald-400 text-[10px] uppercase tracking-[0.2em] mb-4">
+                        <ImageIcon className="w-4 h-4" />
+                        场外风采 Gallery
+                      </h3>
+                      <div className="grid grid-cols-3 gap-3">
+                        {PLAYERS[selectedPlayerId].gallery.map((img, idx) => (
+                          <motion.div 
+                            key={idx} 
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="aspect-square rounded-xl overflow-hidden glass-card p-0 shadow-lg cursor-pointer border-2 border-white/5 hover:border-white/20 transition-all group/photo"
+                            onClick={() => setExpandedImage(img)}
+                          >
+                            <img
+                              src={img}
+                              alt="Gallery"
+                              referrerPolicy="no-referrer"
+                              className="w-full h-full object-cover object-top transition-all duration-700 group-hover/photo:scale-110 filter brightness-90 group-hover/photo:brightness-110"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover/photo:opacity-100 transition-opacity" />
+                          </motion.div>
+                        ))}
+                      </div>
+                    </section>
                   </div>
                 </div>
+              </div>
+              
+              {/* Modal Footer (for mobile especially) */}
+              <div className="p-4 border-t border-white/5 bg-black/20 text-center sm:hidden">
+                <button
+                  onClick={() => setSelectedPlayerId(null)}
+                  className="text-xs text-slate-500 font-bold uppercase tracking-widest"
+                >
+                  点击背景或此处关闭详情
+                </button>
               </div>
             </motion.div>
           </motion.div>
@@ -621,17 +660,17 @@ export default function App() {
             className="flex-none p-4 w-full max-w-4xl mx-auto absolute bottom-0 left-1/2 -translate-x-1/2 bg-gradient-to-t from-[#020617] via-[#020617] to-transparent pt-10 z-20"
           >
             {/* Coach Selector */}
-            <div className="flex flex-col gap-2 mb-4 px-2">
+            <div className="flex flex-col gap-2 mb-3 px-1 sm:px-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button 
                     type="button"
-                    onClick={() => setIsAvatarsExpanded(!isAvatarsExpanded)}
-                    className="text-[10px] uppercase tracking-widest text-slate-500 font-extrabold flex items-center gap-1.5 hover:text-slate-300 transition-colors group/label"
+                    onClick={() => setIsBottomAvatarsExpanded(!isBottomAvatarsExpanded)}
+                    className="text-[9px] sm:text-[10px] uppercase tracking-widest text-slate-500 font-extrabold flex items-center gap-1.5 hover:text-slate-300 transition-colors group/label px-2 py-1 glass-card bg-slate-900/50 border-white/5 active:scale-95"
                   >
-                    <Target className={`w-3 h-3 transition-transform duration-300 ${isAvatarsExpanded ? 'rotate-90 text-blue-500' : ''}`} /> 
-                    想请教谁? (可多选)
-                    <ChevronRight className={`w-3 h-3 transition-transform duration-300 ${isAvatarsExpanded ? 'rotate-90' : ''}`} />
+                    <Target className={`w-3.5 h-3.5 transition-transform duration-300 ${isBottomAvatarsExpanded ? 'rotate-90 text-blue-500' : ''}`} /> 
+                    想请教谁? Select
+                    <ChevronRight className={`w-3 h-3 transition-transform duration-300 ${isBottomAvatarsExpanded ? 'rotate-90' : ''}`} />
                   </button>
                   {selectedChatPlayerIds.length > 0 && (
                     <motion.div 
@@ -670,7 +709,7 @@ export default function App() {
               </div>
               
               <AnimatePresence>
-                {isAvatarsExpanded && (
+                {isBottomAvatarsExpanded && (
                   <motion.div 
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
@@ -678,7 +717,7 @@ export default function App() {
                     transition={{ duration: 0.3, ease: "circOut" }}
                     className="overflow-hidden"
                   >
-                    <div className="flex gap-2.5 py-2">
+                    <div className="flex gap-2.5 py-2 overflow-x-auto no-scrollbar -mx-2 px-2">
                       {Object.entries(PLAYERS).map(([id, p]) => {
                         const isSelected = selectedChatPlayerIds.includes(id);
                         const selectIndex = selectedChatPlayerIds.indexOf(id);
@@ -695,9 +734,9 @@ export default function App() {
                               }
                             }}
                             className={`
-                              w-10 h-10 rounded-full overflow-hidden border-2 transition-all relative group/coach
+                              w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 transition-all relative group/coach shrink-0
                               ${isSelected 
-                                ? 'border-blue-500 ring-4 ring-blue-500/20 scale-110 shadow-xl z-10' 
+                                ? 'border-blue-500 ring-4 ring-blue-500/20 scale-105 shadow-xl z-10' 
                                 : 'border-slate-800 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 hover:scale-105 hover:border-slate-600'}
                             `}
                           >
