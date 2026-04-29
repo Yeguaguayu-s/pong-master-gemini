@@ -122,11 +122,15 @@ interface AnswerDetails {
   focusPoints: string[];
 }
 
+interface AnalysisResult {
+  responses: AnswerDetails[];
+}
+
 interface Message {
   id: string;
   role: "user" | "system";
   content: string;
-  details?: AnswerDetails;
+  details?: AnswerDetails[];
 }
 
 export default function App() {
@@ -137,8 +141,11 @@ export default function App() {
   const [isInputHidden, setIsInputHidden] = useState(false);
   const [isAvatarsExpanded, setIsAvatarsExpanded] = useState(false);
   const [playingGameId, setPlayingGameId] = useState<string | null>(null);
+  const [selectedChatPlayerIds, setSelectedChatPlayerIds] = useState<string[]>([]);
+  const [autoMatchMode, setAutoMatchMode] = useState<'single' | 'multi'>('single');
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -147,6 +154,18 @@ export default function App() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  const handleSuggestionClick = (text: string) => {
+    setInput(text);
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        // 将光标移至末尾
+        const len = text.length;
+        inputRef.current.setSelectionRange(len, len);
+      }
+    }, 100);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,7 +182,11 @@ export default function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: userMsg.content }),
+        body: JSON.stringify({ 
+          message: userMsg.content,
+          playerIds: selectedChatPlayerIds,
+          autoMatchMode: selectedChatPlayerIds.length === 0 ? autoMatchMode : undefined
+        }),
       });
 
       if (!response.ok) {
@@ -192,9 +215,13 @@ export default function App() {
         throw new Error("AI 返回了空内容");
       }
       
-      let data: AnswerDetails;
+      let data: AnalysisResult;
       try {
         data = JSON.parse(jsonStr);
+        // Fallback for old single response format
+        if (!data.responses && (data as any).playerId) {
+          data = { responses: [data as any] };
+        }
       } catch (e) {
         throw new Error(`AI 返回了格式不正确的数据: ${jsonStr.slice(0, 50)}...`);
       }
@@ -203,7 +230,7 @@ export default function App() {
         id: (Date.now() + 1).toString(),
         role: "system",
         content: "",
-        details: data,
+        details: data.responses,
       };
       setMessages((prev) => [...prev, sysMsg]);
     } catch (error: any) {
@@ -305,14 +332,14 @@ export default function App() {
                 描述你遇到的问题，系统会自动匹配最擅长该技术的国乒冠军为你解答。
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3">
-                <button onClick={() => setInput("我的反手拧拉总是吃旋转，起不来下旋球怎么办？")} className="px-4 py-2 glass-card hover:bg-slate-800/80 rounded-full text-sm transition-colors text-slate-300 hover:text-white">
-                  教学：反手拧拉起下旋
+                <button onClick={() => handleSuggestionClick("我的反手拧拉总是吃旋转，起不来下旋球怎么办？")} className="px-4 py-2 glass-card hover:bg-slate-800/80 rounded-full text-sm transition-colors text-slate-300 hover:text-white">
+                  教学：反手拧拉下旋球技巧
                 </button>
-                <button onClick={() => setInput("正手拉加转弧圈球总是发不上力，身体不够协调。")} className="px-4 py-2 glass-card hover:bg-slate-800/80 rounded-full text-sm transition-colors text-slate-300 hover:text-white">
-                  教学：正手加转弧圈力
+                <button onClick={() => handleSuggestionClick("正手拉加转弧圈球总是发不上力，身体不够协调。")} className="px-4 py-2 glass-card hover:bg-slate-800/80 rounded-full text-sm transition-colors text-slate-300 hover:text-white">
+                  教学：提升正手加转弧圈发力
                 </button>
-                <button onClick={() => setInput("比赛到了决胜局关键分，总是不敢出手，怎么练心态？")} className="px-4 py-2 glass-card hover:bg-slate-800/80 rounded-full text-sm transition-colors text-slate-300 hover:text-white">
-                  心理：关键分怎么打
+                <button onClick={() => handleSuggestionClick("比赛到了决胜局关键分，总是不敢出手，怎么练心态？")} className="px-4 py-2 glass-card hover:bg-slate-800/80 rounded-full text-sm transition-colors text-slate-300 hover:text-white">
+                  心理：决胜局关键球心态
                 </button>
               </div>
             </div>
@@ -337,76 +364,86 @@ export default function App() {
                             {msg.content}
                           </div>
                         ) : (
-                          <div className="flex-1 w-full space-y-6">
-                            {/* Player Card header */}
-                            <div className="flex items-center gap-4 glass-card p-6">
-                              <div className={`w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl overflow-hidden border border-white/20 shadow-[0_0_15px_rgba(0,0,0,0.5)]`}>
-                                <img
-                                  src={PLAYERS[msg.details.playerId]?.image || "https://cravatar.cn/avatar/default?d=identicon&s=200"}
-                                  alt={msg.details.playerId}
-                                  referrerPolicy="no-referrer"
-                                  className="w-full h-full object-cover object-top"
-                                  onError={(e) => {
-                                      // Fallback logic for broken wiki images
-                                      (e.target as HTMLImageElement).src = `https://cravatar.cn/avatar/${encodeURIComponent(PLAYERS[msg.details.playerId]?.name || 'Player')}?d=identicon&s=200`;
-                                  }}
-                                />
-                              </div>
-                              <div>
-                                <h3 className="text-xl font-bold tracking-tight flex items-center gap-2 uppercase italic text-slate-100">
-                                  {PLAYERS[msg.details.playerId]?.name || "神秘名将"}
-                                  <span className="badge-gold">
-                                    {PLAYERS[msg.details.playerId]?.title || "指导教练"}
-                                  </span>
-                                </h3>
-                                <p className="text-slate-400 italic mt-2 font-serif text-sm">
-                                  "{msg.details.personalityGreeting}"
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Content Blocks */}
-                            <div className="space-y-6">
-                              <div className="glass-card p-6 border-l-4 border-l-amber-500 border-white/10 shadow-sm">
-                                <h4 className="flex items-center gap-2 font-bold mb-4 text-amber-500 tracking-widest text-xs uppercase">
-                                  <Activity className="w-4 h-4" />
-                                  教练指导意见 Coach Insight
-                                </h4>
-                                <p className="leading-relaxed text-slate-200">
-                                  {msg.details.tacticalAdvice}
-                                </p>
-                              </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                                <div className="glass-card p-6 relative overflow-hidden group">
-                                  <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-transparent pointer-events-none" />
-                                  <h4 className="flex items-center gap-2 font-bold mb-4 text-slate-500 text-xs uppercase">
-                                    <Zap className="w-4 h-4" />
-                                    动作轨迹演示 Motion Analysis
-                                  </h4>
-                                  <p className="text-sm leading-relaxed text-slate-300 relative z-10">
-                                    {msg.details.actionDemonstration}
-                                  </p>
+                          <div className="flex-1 w-full space-y-10">
+                            {msg.details.map((detail, dIdx) => (
+                              <div key={`${detail.playerId}-${dIdx}`} className="space-y-6 relative">
+                                {msg.details!.length > 1 && (
+                                  <div className="absolute -left-10 top-10 flex flex-col items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold border-2 border-[#020617] shadow-lg">
+                                      {dIdx + 1}
+                                    </div>
+                                    <div className="w-0.5 h-full bg-gradient-to-b from-blue-600/50 to-transparent absolute top-8 -z-10" />
+                                  </div>
+                                )}
+                                
+                                {/* Player Card header */}
+                                <div className="flex items-center gap-4 glass-card p-6 border-white/5 bg-slate-900/40">
+                                  <div className={`w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl overflow-hidden border border-white/20 shadow-[0_0_15px_rgba(0,0,0,0.5)]`}>
+                                    <img
+                                      src={PLAYERS[detail.playerId]?.image || "https://cravatar.cn/avatar/default?d=identicon&s=200"}
+                                      alt={detail.playerId}
+                                      referrerPolicy="no-referrer"
+                                      className="w-full h-full object-cover object-top"
+                                      onError={(e) => {
+                                          (e.target as HTMLImageElement).src = `https://cravatar.cn/avatar/${encodeURIComponent(PLAYERS[detail.playerId]?.name || 'Player')}?d=identicon&s=200`;
+                                      }}
+                                    />
+                                  </div>
+                                  <div>
+                                    <h3 className="text-xl font-bold tracking-tight flex items-center gap-2 uppercase italic text-slate-100">
+                                      {PLAYERS[detail.playerId]?.name || "神秘名将"}
+                                      <span className="badge-gold">
+                                        {PLAYERS[detail.playerId]?.title || "指导教练"}
+                                      </span>
+                                    </h3>
+                                    <p className="text-slate-400 italic mt-2 font-serif text-sm">
+                                      "{detail.personalityGreeting}"
+                                    </p>
+                                  </div>
                                 </div>
 
-                                <div className="glass-card p-6 bg-slate-900">
-                                  <h4 className="flex items-center gap-2 font-bold mb-4 text-blue-400 text-xs uppercase">
-                                    <Shield className="w-4 h-4" />
-                                    核心要点 Checklist
-                                  </h4>
-                                  <ul className="space-y-3">
-                                    {msg.details.focusPoints.map((point, idx) => (
-                                      <li key={idx} className="flex gap-3 text-sm text-slate-300 items-start">
-                                        <span className="shrink-0 flex items-center justify-center text-blue-400 text-xs mt-0.5">
-                                          •
-                                        </span>
-                                        <span className="leading-relaxed">{point}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
+                                {/* Content Blocks */}
+                                <div className="space-y-6">
+                                  <div className="glass-card p-6 border-l-4 border-l-amber-500 border-white/10 shadow-sm">
+                                    <h4 className="flex items-center gap-2 font-bold mb-4 text-amber-500 tracking-widest text-xs uppercase">
+                                      <Activity className="w-4 h-4" />
+                                      {PLAYERS[detail.playerId]?.name} 的见解 Insight
+                                    </h4>
+                                    <p className="leading-relaxed text-slate-200">
+                                      {detail.tacticalAdvice}
+                                    </p>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                    <div className="glass-card p-6 relative overflow-hidden group">
+                                      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-transparent pointer-events-none" />
+                                      <h4 className="flex items-center gap-2 font-bold mb-4 text-slate-500 text-xs uppercase">
+                                        <Zap className="w-4 h-4" />
+                                        动作轨迹 Demo
+                                      </h4>
+                                      <p className="text-sm leading-relaxed text-slate-300 relative z-10">
+                                        {detail.actionDemonstration}
+                                      </p>
+                                    </div>
+
+                                    <div className="glass-card p-6 bg-slate-900">
+                                      <h4 className="flex items-center gap-2 font-bold mb-4 text-blue-400 text-xs uppercase">
+                                        <Shield className="w-4 h-4" />
+                                        核心要点 Checklist
+                                      </h4>
+                                      <ul className="space-y-3">
+                                        {detail.focusPoints.map((point, idx) => (
+                                          <li key={idx} className="flex gap-3 text-sm text-slate-300 items-start">
+                                            <span className="shrink-0 flex items-center justify-center text-blue-400 text-xs mt-0.5">•</span>
+                                            <span className="leading-relaxed">{point}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
+                            ))}
                           </div>
                         )}
                       </div>
@@ -583,12 +620,114 @@ export default function App() {
             transition={{ duration: 0.3 }}
             className="flex-none p-4 w-full max-w-4xl mx-auto absolute bottom-0 left-1/2 -translate-x-1/2 bg-gradient-to-t from-[#020617] via-[#020617] to-transparent pt-10 z-20"
           >
+            {/* Coach Selector */}
+            <div className="flex flex-col gap-2 mb-4 px-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button 
+                    type="button"
+                    onClick={() => setIsAvatarsExpanded(!isAvatarsExpanded)}
+                    className="text-[10px] uppercase tracking-widest text-slate-500 font-extrabold flex items-center gap-1.5 hover:text-slate-300 transition-colors group/label"
+                  >
+                    <Target className={`w-3 h-3 transition-transform duration-300 ${isAvatarsExpanded ? 'rotate-90 text-blue-500' : ''}`} /> 
+                    想请教谁? (可多选)
+                    <ChevronRight className={`w-3 h-3 transition-transform duration-300 ${isAvatarsExpanded ? 'rotate-90' : ''}`} />
+                  </button>
+                  {selectedChatPlayerIds.length > 0 && (
+                    <motion.div 
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="flex items-center gap-1 text-[10px] bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20 font-medium"
+                    >
+                      <span>已选 {selectedChatPlayerIds.length} 位名师</span>
+                      <button onClick={() => setSelectedChatPlayerIds([])} className="hover:text-blue-200 ml-1">
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
+                {selectedChatPlayerIds.length === 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-slate-600 italic">自动匹配</span>
+                    <div className="flex bg-slate-900/80 rounded-full p-0.5 border border-slate-700 shadow-inner">
+                      <button 
+                        type="button"
+                        onClick={() => setAutoMatchMode('single')}
+                        className={`px-2 py-0.5 text-[9px] rounded-full transition-all font-bold ${autoMatchMode === 'single' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                      >
+                        单人
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setAutoMatchMode('multi')}
+                        className={`px-2 py-0.5 text-[9px] rounded-full transition-all font-bold ${autoMatchMode === 'multi' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                      >
+                        多人
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <AnimatePresence>
+                {isAvatarsExpanded && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "circOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex gap-2.5 py-2">
+                      {Object.entries(PLAYERS).map(([id, p]) => {
+                        const isSelected = selectedChatPlayerIds.includes(id);
+                        const selectIndex = selectedChatPlayerIds.indexOf(id);
+                        
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedChatPlayerIds(prev => prev.filter(pid => pid !== id));
+                              } else {
+                                setSelectedChatPlayerIds(prev => [...prev, id]);
+                              }
+                            }}
+                            className={`
+                              w-10 h-10 rounded-full overflow-hidden border-2 transition-all relative group/coach
+                              ${isSelected 
+                                ? 'border-blue-500 ring-4 ring-blue-500/20 scale-110 shadow-xl z-10' 
+                                : 'border-slate-800 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 hover:scale-105 hover:border-slate-600'}
+                            `}
+                          >
+                            {isSelected && (
+                              <div className="absolute top-0 right-0 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-[8px] font-bold z-20 border border-white shadow-md">
+                                {selectIndex + 1}
+                              </div>
+                            )}
+                            <img src={p.image} alt={p.name} className="w-full h-full object-cover object-top" referrerPolicy="no-referrer" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover/coach:opacity-100 transition-opacity flex items-end justify-center pb-1">
+                              <span className="text-[8px] text-white font-bold">{p.name}</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <form onSubmit={handleSubmit} className="relative group">
               <input
+            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="提问：正手拉下旋总是下网怎么办？"
+            placeholder={selectedChatPlayerIds.length > 0 
+              ? `咨询 ${selectedChatPlayerIds.map(id => PLAYERS[id].name).join(' & ')}...` 
+              : "提问：正手拉下旋球老是下网怎么办？"}
             className="w-full glass-card bg-slate-900/90 rounded-full px-6 py-4 pr-14 focus:outline-none focus:ring-1 focus:ring-blue-500/50 shadow-2xl backdrop-blur transition-all placeholder:text-slate-600 text-slate-100 border border-slate-700"
             disabled={isLoading}
           />

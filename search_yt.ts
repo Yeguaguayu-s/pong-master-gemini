@@ -1,4 +1,3 @@
-import { google } from "googleapis"; // Wait I don't have this.
 // I can just fetch from standard youtube search page and grep the id!
 async function main() {
     for (const name of ["马龙 乒乓球", "樊振东 乒乓球", "张继科 乒乓球", "许昕 乒乓球", "王楚钦 乒乓球", "孙颖莎 乒乓球"]) {
