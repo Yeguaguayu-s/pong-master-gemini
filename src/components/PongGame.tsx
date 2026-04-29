@@ -12,6 +12,9 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
   const [score, setScore] = useState({ user: 0, ai: 0 });
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState('');
+  const [isServing, setIsServing] = useState(false);
+  const [currentServer, setCurrentServer] = useState<'user' | 'ai'>('user');
+  const [showYellowCard, setShowYellowCard] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -56,6 +59,13 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
       color: '#fff'
     };
 
+    // Use refs for values needed in the animation loop to avoid dependency issues or stale state
+    const gameStatus = {
+      isServing: false,
+      currentServer: 'user' as 'user' | 'ai',
+      showYellowCard: false
+    };
+
     // Set AI characteristics based on playerKey
     switch (playerKey) {
       case 'ma_long': // Hexagon warrior: balanced, very fast, low error
@@ -97,16 +107,13 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
     const initialBallSpeed = ball.speed;
 
     let totalPoints = 0;
-    let currentServer: 'user' | 'ai' = 'user';
-    let isServing = false;
     let isAimingServe = false;
     let serveTimeout: number;
     let serveStartTime = 0;
-    let showYellowCard = false;
 
     const executeServe = (targetX?: number, targetY?: number) => {
       ball.speed = initialBallSpeed;
-      if (currentServer === 'user') {
+      if (gameStatus.currentServer === 'user') {
         const tx = targetX !== undefined ? targetX : canvasWidth / 2;
         const ty = targetY !== undefined ? targetY : 0;
         
@@ -131,23 +138,28 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
         ball.vx = (dx / distance) * ball.speed;
         ball.vy = (dy / distance) * ball.speed;
       }
-      isServing = false;
-      showYellowCard = false;
+      gameStatus.isServing = false;
+      setIsServing(false);
+      gameStatus.showYellowCard = false;
+      setShowYellowCard(false);
     };
 
     const serveBall = () => {
-      isServing = true;
+      gameStatus.isServing = true;
+      setIsServing(true);
       ball.vx = 0;
       ball.vy = 0;
-      showYellowCard = false;
+      gameStatus.showYellowCard = false;
+      setShowYellowCard(false);
 
       if (userPaddle.score >= 10 && aiPaddle.score >= 10) {
-        currentServer = (totalPoints % 2 === 0) ? 'user' : 'ai';
+        gameStatus.currentServer = (totalPoints % 2 === 0) ? 'user' : 'ai';
       } else {
-        currentServer = (Math.floor(totalPoints / 2) % 2 === 0) ? 'user' : 'ai';
+        gameStatus.currentServer = (Math.floor(totalPoints / 2) % 2 === 0) ? 'user' : 'ai';
       }
+      setCurrentServer(gameStatus.currentServer);
 
-      if (currentServer === 'user') {
+      if (gameStatus.currentServer === 'user') {
         serveStartTime = Date.now();
       } else {
         const randomServeTime = 500 + Math.random() * 2000;
@@ -208,12 +220,13 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
     };
 
     const update = () => {
-      if (isServing) {
-        if (currentServer === 'user') {
+      if (gameStatus.isServing) {
+        if (gameStatus.currentServer === 'user') {
           ball.x = userPaddle.x + userPaddle.width / 2;
           ball.y = userPaddle.y - ballRadius - 2;
           if (Date.now() - serveStartTime > 5000) {
-            showYellowCard = true;
+            gameStatus.showYellowCard = true;
+            setShowYellowCard(true);
           }
         } else {
           // AI paddle wanders side to side while holding ball
@@ -332,8 +345,8 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
       drawText(userPaddle.score.toString(), canvasWidth / 2, 3 * canvasHeight / 4, 'rgba(255,255,255,0.1)');
 
       // Draw Serve Prompt / Yellow Card
-      if (isServing && currentServer === 'user') {
-        if (showYellowCard) {
+      if (gameStatus.isServing && gameStatus.currentServer === 'user') {
+        if (gameStatus.showYellowCard) {
           drawText('🟨 黄牌警告: 发球超时', canvasWidth / 2, canvasHeight / 2 - 20, '#eab308', 'center', 'middle', 24);
         }
         drawText('按住屏幕瞄准，松开发球', canvasWidth / 2, canvasHeight / 2 + 30, 'rgba(255,255,255,0.7)', 'center', 'middle', 18);
@@ -360,7 +373,7 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
     };
 
     const handlePointerDown = (e: PointerEvent) => {
-      if (isServing && currentServer === 'user') {
+      if (gameStatus.isServing && gameStatus.currentServer === 'user') {
         isAimingServe = true;
       }
       // Enable global tracking during interaction
@@ -370,7 +383,7 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
     const handlePointerUp = (e: PointerEvent) => {
       window.removeEventListener('pointermove', handlePointerMove);
       
-      if (isServing && currentServer === 'user' && isAimingServe) {
+      if (gameStatus.isServing && gameStatus.currentServer === 'user' && isAimingServe) {
         if (!canvas) return;
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
