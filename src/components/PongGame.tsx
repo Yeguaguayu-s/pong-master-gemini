@@ -349,7 +349,7 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
         if (gameStatus.showYellowCard) {
           drawText('🟨 黄牌警告: 发球超时', canvasWidth / 2, canvasHeight / 2 - 20, '#eab308', 'center', 'middle', 24);
         }
-        drawText('按住屏幕瞄准，松开发球', canvasWidth / 2, canvasHeight / 2 + 30, 'rgba(255,255,255,0.7)', 'center', 'middle', 18);
+        drawText('点击对方区域发球', canvasWidth / 2, canvasHeight / 2 + 30, 'rgba(255,255,255,0.7)', 'center', 'middle', 18);
       }
     };
 
@@ -365,7 +365,7 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
 
     // Event listeners for paddle movement
     const handlePointerMove = (e: PointerEvent) => {
-      if (isAimingServe || !canvas) return;
+      if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       let newX = (e.clientX - rect.left) * scaleX - userPaddle.width / 2;
@@ -373,27 +373,31 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
     };
 
     const handlePointerDown = (e: PointerEvent) => {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      let targetX = (e.clientX - rect.left) * scaleX;
+      let targetY = (e.clientY - rect.top) * scaleY;
+
+      // Handle serving: Click in top half to serve
       if (gameStatus.isServing && gameStatus.currentServer === 'user') {
-        isAimingServe = true;
+        if (targetY < canvasHeight / 2) {
+          executeServe(targetX, targetY);
+          return;
+        }
       }
+
+      // Standard move on down too
+      let newX = targetX - userPaddle.width / 2;
+      userPaddle.x = Math.max(0, Math.min(canvasWidth - userPaddle.width, newX));
+
       // Enable global tracking during interaction
       window.addEventListener('pointermove', handlePointerMove);
     };
 
     const handlePointerUp = (e: PointerEvent) => {
       window.removeEventListener('pointermove', handlePointerMove);
-      
-      if (gameStatus.isServing && gameStatus.currentServer === 'user' && isAimingServe) {
-        if (!canvas) return;
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        let targetY = (e.clientY - rect.top) * scaleY;
-        let targetX = (e.clientX - rect.left) * scaleX;
-
-        executeServe(targetX, Math.min(targetY, userPaddle.y - ballRadius - 10));
-      }
-      isAimingServe = false;
     };
 
     canvas.addEventListener('pointerdown', handlePointerDown as EventListener);
@@ -475,8 +479,8 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
       </div>
       
       <div className="mt-6 flex flex-col items-center gap-1 opacity-40 pointer-events-none">
-        <p className="text-[10px] text-white font-medium">左右滑动底端控制球拍</p>
-        <p className="text-[8px] text-slate-500 uppercase tracking-tighter">Mobile Optimized Interface</p>
+        <p className="text-[10px] text-white font-medium text-center">滑动底端控制球拍 · 点击对方半区发球</p>
+        <p className="text-[8px] text-slate-500 uppercase tracking-tighter">Responsive Game Interface</p>
       </div>
     </div>
   );
