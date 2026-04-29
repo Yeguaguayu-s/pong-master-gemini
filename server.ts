@@ -12,11 +12,14 @@ async function startServer() {
   // API Route for chat
   app.post("/api/chat", async (req, res) => {
     try {
+      console.log("Received /api/chat req body:", req.body);
       const apiKey = process.env.QWEN_API_KEY || process.env.VITE_QWEN_API_KEY;
       if (!apiKey) {
+        console.error("API Key not configured");
         return res.status(500).json({ error: { message: "API Key not configured" } });
       }
 
+      console.log("Calling OpenAI SDK...");
       const openai = new OpenAI({
         apiKey: apiKey,
         baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1",

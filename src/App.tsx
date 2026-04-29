@@ -167,15 +167,37 @@ export default function App() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch (e) {
+          throw new Error(`请求失败 (${response.status}): ${errorText ? errorText.slice(0, 50) : "empty response"}`);
+        }
         throw new Error(errorData.error?.message || "网络请求失败");
       }
 
-      const responseData = await response.json();
+      const responseText = await response.text();
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error(`JSON解析失败: ${responseText ? responseText.slice(0, 50) : "empty response"}`);
+      }
+      
       let jsonStr = responseData.choices[0]?.message?.content?.trim() || "{}";
       jsonStr = jsonStr.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
       
-      const data = JSON.parse(jsonStr) as AnswerDetails;
+      if (!jsonStr) {
+        throw new Error("AI 返回了空内容");
+      }
+      
+      let data: AnswerDetails;
+      try {
+        data = JSON.parse(jsonStr);
+      } catch (e) {
+        throw new Error(`AI 返回了格式不正确的数据: ${jsonStr.slice(0, 50)}...`);
+      }
 
       const sysMsg: Message = {
         id: (Date.now() + 1).toString(),
