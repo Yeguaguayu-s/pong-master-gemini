@@ -9,10 +9,19 @@ async function startServer() {
 
   app.use(express.json());
 
-  // API Route for chat
-  app.post("/api/chat", async (req, res) => {
+  // Health check route - used to verify the server is running correctly
+  app.get("/api/health", (req, res) => {
+    res.json({ 
+      status: "ok", 
+      message: "Server is running",
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // API Route for chat - changed path to avoid any cached 405 issues
+  app.post("/api/v1/chat", async (req, res) => {
     try {
-      console.log("Received /api/chat req body:", req.body);
+      console.log(`[${new Date().toISOString()}] Incoming chat request for: ${req.body.message?.substring(0, 50)}...`);
       const apiKey = process.env.QWEN_API_KEY || process.env.VITE_QWEN_API_KEY;
       if (!apiKey) {
         console.error("API Key not configured");
