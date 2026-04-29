@@ -351,7 +351,7 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
     loop();
 
     // Event listeners for paddle movement
-    const handleMouseMove = (e: MouseEvent) => {
+    const handlePointerMove = (e: PointerEvent) => {
       if (isAimingServe || !canvas) return;
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
@@ -359,25 +359,17 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
       userPaddle.x = Math.max(0, Math.min(canvasWidth - userPaddle.width, newX));
     };
 
-    const handleTouchMove = (e: TouchEvent) => {
-      // Prevent default scrolling only if touch is on canvas
-      if (e.target === canvas) {
-        e.preventDefault();
-        if (isAimingServe || !canvas) return;
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        let newX = (e.touches[0].clientX - rect.left) * scaleX - userPaddle.width / 2;
-        userPaddle.x = Math.max(0, Math.min(canvasWidth - userPaddle.width, newX));
-      }
-    };
-
     const handlePointerDown = (e: PointerEvent) => {
       if (isServing && currentServer === 'user') {
         isAimingServe = true;
       }
+      // Enable global tracking during interaction
+      window.addEventListener('pointermove', handlePointerMove);
     };
 
     const handlePointerUp = (e: PointerEvent) => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      
       if (isServing && currentServer === 'user' && isAimingServe) {
         if (!canvas) return;
         const rect = canvas.getBoundingClientRect();
@@ -386,68 +378,73 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
         let targetY = (e.clientY - rect.top) * scaleY;
         let targetX = (e.clientX - rect.left) * scaleX;
 
-        // Note: they can serve backwards if they target bottom half, 
-        // to prevent this we can enforce targetY to be < user paddle y (or just anything, ping pong mechanics allow it).
-        // Let's just execute serve directly
         executeServe(targetX, Math.min(targetY, userPaddle.y - ballRadius - 10));
       }
       isAimingServe = false;
     };
 
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('pointerdown', handlePointerDown as EventListener);
     window.addEventListener('pointerup', handlePointerUp as EventListener);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.clearTimeout(serveTimeout);
-      canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('touchmove', handleTouchMove);
       canvas.removeEventListener('pointerdown', handlePointerDown as EventListener);
       window.removeEventListener('pointerup', handlePointerUp as EventListener);
+      window.removeEventListener('pointermove', handlePointerMove);
     };
   }, [playerKey, gameOver, playerName]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#020617]/95 flex flex-col items-center justify-center p-4 backdrop-blur-md">
-      <div className="absolute top-6 right-6">
+    <div className="fixed inset-0 z-50 bg-[#020617]/98 flex flex-col items-center justify-center p-2 sm:p-4 backdrop-blur-xl">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
         <button
           onClick={onClose}
-          className="p-3 bg-slate-800/80 hover:bg-slate-700 rounded-full text-slate-300 transition-colors border border-white/10"
+          className="p-3 bg-slate-800/80 hover:bg-slate-700 rounded-full text-slate-200 transition-colors border border-white/10 shadow-lg"
         >
           <X className="w-6 h-6" />
         </button>
       </div>
 
-      <div className="text-center mb-6 w-full max-w-[400px]">
-        <h2 className="text-2xl font-black italic tracking-wider text-white flex items-center justify-center gap-3">
-          <Activity className="w-6 h-6 text-red-500" />
+      <div className="text-center mb-4 sm:mb-6 w-full max-w-[400px] px-2">
+        <h2 className="text-xl sm:text-2xl font-black italic tracking-wider text-white flex items-center justify-center gap-3">
+          <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-red-500 animate-pulse" />
           切磋模式 vs {playerName}
         </h2>
-        <div className="flex justify-between mt-4 text-slate-400 font-mono text-xl bg-slate-900/50 p-3 rounded-2xl border border-white/5 shadow-inner">
-          <span className="text-red-400 font-bold">AI: {score.ai}</span>
-          <span className="text-slate-600">11分制</span>
-          <span className="text-blue-400 font-bold">You: {score.user}</span>
+        <div className="flex justify-between mt-3 sm:mt-4 text-slate-400 font-mono text-lg sm:text-xl bg-slate-900/80 p-2 sm:p-3 rounded-2xl border border-white/5 shadow-2xl">
+          <div className="flex flex-col items-start px-2">
+            <span className="text-[10px] uppercase tracking-widest text-slate-500">AI Score</span>
+            <span className="text-red-500 font-black">{score.ai}</span>
+          </div>
+          <div className="flex items-center text-slate-600 text-xs sm:text-sm">
+            11 POINTS
+          </div>
+          <div className="flex flex-col items-end px-2">
+            <span className="text-[10px] uppercase tracking-widest text-slate-500">Your Score</span>
+            <span className="text-blue-500 font-black">{score.user}</span>
+          </div>
         </div>
       </div>
 
-      <div className="relative shadow-2xl rounded-lg overflow-hidden border-2 border-slate-700/50 bg-slate-900 touch-none">
+      <div className="relative shadow-[0_0_50px_rgba(30,58,138,0.3)] rounded-2xl overflow-hidden border-2 border-slate-700/50 bg-black touch-none w-full max-w-[400px] aspect-[4/5] flex items-center justify-center">
         {gameOver && (
-          <div className="absolute inset-0 bg-black/80 flex items-center justify-center flex-col z-10 backdrop-blur-sm">
-            <Trophy className={`w-16 h-16 mb-4 ${winner.includes('赢') ? 'text-amber-400' : 'text-slate-500'}`} />
-            <h3 className="text-3xl font-bold bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent mb-6">
+          <div className="absolute inset-0 bg-slate-950/90 flex items-center justify-center flex-col z-20 backdrop-blur-md p-6 text-center">
+            <Trophy className={`w-16 h-16 mb-4 ${winner.includes('赢') ? 'text-yellow-400 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]' : 'text-slate-500'}`} />
+            <h3 className="text-3xl font-black bg-gradient-to-br from-white to-slate-400 bg-clip-text text-transparent mb-2 italic">
               {winner}
             </h3>
+            <p className="text-slate-400 text-sm mb-8">
+              {winner.includes('赢') ? `成功战胜了顶级国乒冠军 ${playerName}！` : `惜败于 ${playerName}，再接再厉！`}
+            </p>
             <button
               onClick={() => {
                 setScore({ user: 0, ai: 0 });
                 setGameOver(false);
                 setWinner('');
               }}
-              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full transition-colors shadow-lg shadow-blue-500/20"
+              className="w-full max-w-[200px] px-8 py-4 bg-white text-black hover:bg-blue-50 font-black rounded-xl transition-all shadow-xl active:scale-95"
             >
-              再来一局
+              继续切磋
             </button>
           </div>
         )}
@@ -455,12 +452,18 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
           ref={canvasRef}
           width={400}
           height={500}
-          className="w-full max-w-[400px] h-auto block select-none"
-          style={{ touchAction: 'none' }}
+          className="w-full h-full block select-none touch-none"
         />
-        <div className="absolute bottom-4 left-0 w-full text-center pointer-events-none opacity-30 text-xs text-white">
-          拖动或滑动控制底侧球拍 / 11分制
-        </div>
+        {!gameOver && !isServing && (
+          <div className="absolute top-4 left-0 w-full text-center pointer-events-none opacity-20 text-[10px] text-white tracking-[0.2em] font-mono">
+            PONG MASTER AI SYSTEM v1.0
+          </div>
+        )}
+      </div>
+      
+      <div className="mt-6 flex flex-col items-center gap-1 opacity-40 pointer-events-none">
+        <p className="text-[10px] text-white font-medium">左右滑动底端控制球拍</p>
+        <p className="text-[8px] text-slate-500 uppercase tracking-tighter">Mobile Optimized Interface</p>
       </div>
     </div>
   );
