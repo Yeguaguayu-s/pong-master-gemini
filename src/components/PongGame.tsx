@@ -21,17 +21,17 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
 
     let animationFrameId: number;
 
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
+    const canvasWidth = 400;
+    const canvasHeight = 500;
 
     // Game state
     const paddleWidth = 80;
-    const paddleHeight = 10;
+    const paddleHeight = 14;
     const ballRadius = 6;
 
     let userPaddle = {
       x: canvasWidth / 2 - paddleWidth / 2,
-      y: canvasHeight - paddleHeight - 10,
+      y: canvasHeight - paddleHeight - 20,
       width: paddleWidth,
       height: paddleHeight,
       score: 0
@@ -39,7 +39,7 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
 
     let aiPaddle = {
       x: canvasWidth / 2 - paddleWidth / 2,
-      y: 10,
+      y: 20,
       width: paddleWidth,
       height: paddleHeight,
       score: 0,
@@ -172,6 +172,33 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
       ctx.fill();
     };
 
+    const drawPaddle = (x: number, y: number, w: number, h: number, color: string) => {
+      ctx.save();
+      
+      // Draw paddle head (rounded rect)
+      ctx.fillStyle = color;
+      const radius = h / 2;
+      
+      ctx.beginPath();
+      if ((ctx as any).roundRect) {
+        (ctx as any).roundRect(x, y, w, h, radius);
+      } else {
+        ctx.rect(x, y, w, h);
+      }
+      ctx.fill();
+      
+      // Stronger outline for visibility
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Add a subtle sheen to make it look like a paddle
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.fillRect(x, y, w, h / 2);
+      
+      ctx.restore();
+    };
+
     const drawText = (text: string, x: number, y: number, color: string, align: CanvasTextAlign = 'center', baseline: CanvasTextBaseline = 'middle', fontSize: number = 36) => {
       ctx.fillStyle = color;
       ctx.font = `bold ${fontSize}px Inter, sans-serif`;
@@ -294,8 +321,8 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
       ctx.setLineDash([]); // Reset dashed line
 
       // Draw Paddles
-      drawRect(userPaddle.x, userPaddle.y, userPaddle.width, userPaddle.height, '#3b82f6'); // blue-500
-      drawRect(aiPaddle.x, aiPaddle.y, aiPaddle.width, aiPaddle.height, '#ef4444'); // red-500
+      drawPaddle(userPaddle.x, userPaddle.y, userPaddle.width, userPaddle.height, '#3b82f6'); // blue-500
+      drawPaddle(aiPaddle.x, aiPaddle.y, aiPaddle.width, aiPaddle.height, '#ef4444'); // red-500
 
       // Draw Ball
       drawCircle(ball.x, ball.y, ballRadius, ball.color);
@@ -427,7 +454,7 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
         <canvas
           ref={canvasRef}
           width={400}
-          height={600}
+          height={500}
           className="w-full max-w-[400px] h-auto block select-none"
           style={{ touchAction: 'none' }}
         />

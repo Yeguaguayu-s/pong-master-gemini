@@ -320,7 +320,7 @@ export default function App() {
       </header>
 
       {/* Main Chat Area */}
-      <main className={`flex-1 overflow-y-auto p-4 sm:p-6 ${!isInputHidden ? 'pb-48' : 'pb-8'} space-y-8 scroll-smooth z-10`}>
+      <main className={`flex-1 overflow-y-auto p-4 sm:p-6 ${!isInputHidden ? (isAvatarsExpanded ? 'pb-80' : 'pb-60') : 'pb-8'} space-y-8 scroll-smooth z-10`}>
         <div className="max-w-4xl mx-auto">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full min-h-[40vh] text-center pt-20">
