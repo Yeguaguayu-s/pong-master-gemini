@@ -412,7 +412,7 @@ export default function App() {
                                   </div>
                                   <div className="min-w-0 flex-1">
                                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                                      <h3 className="text-base sm:text-xl font-bold tracking-tight uppercase italic text-foreground truncate">
+                                      <h3 className="text-base sm:text-xl font-bold tracking-tight uppercase italic text-foreground truncate pr-2 py-1">
                                         {PLAYERS[detail.playerId]?.name || "神秘名将"}
                                       </h3>
                                       <span className="badge-gold self-start sm:self-auto px-1.5 py-0.5 leading-none">
