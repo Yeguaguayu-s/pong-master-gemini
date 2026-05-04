@@ -5,9 +5,10 @@ interface PongGameProps {
   playerKey: string;
   playerName: string;
   onClose: () => void;
+  isDarkMode: boolean;
 }
 
-export default function PongGame({ playerKey, playerName, onClose }: PongGameProps) {
+export default function PongGame({ playerKey, playerName, onClose, isDarkMode }: PongGameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState({ user: 0, ai: 0 });
   const [gameOver, setGameOver] = useState(false);
@@ -322,14 +323,14 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
 
     const draw = () => {
       // Clear canvas
-      drawRect(0, 0, canvasWidth, canvasHeight, 'rgba(2, 6, 23, 1)'); // slate-950
+      drawRect(0, 0, canvasWidth, canvasHeight, isDarkMode ? 'rgba(2, 6, 23, 1)' : '#f8fafc'); // slate-950 or slate-50
 
       // Draw net (dashed line horizontally)
       ctx.beginPath();
       ctx.setLineDash([10, 10]);
       ctx.moveTo(0, canvasHeight / 2);
       ctx.lineTo(canvasWidth, canvasHeight / 2);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.strokeStyle = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
       ctx.stroke();
       ctx.setLineDash([]); // Reset dashed line
 
@@ -338,18 +339,18 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
       drawPaddle(aiPaddle.x, aiPaddle.y, aiPaddle.width, aiPaddle.height, '#ef4444'); // red-500
 
       // Draw Ball
-      drawCircle(ball.x, ball.y, ballRadius, ball.color);
+      drawCircle(ball.x, ball.y, ballRadius, isDarkMode ? '#fff' : '#000');
 
       // Draw Scores faintly
-      drawText(aiPaddle.score.toString(), canvasWidth / 2, canvasHeight / 4, 'rgba(255,255,255,0.1)');
-      drawText(userPaddle.score.toString(), canvasWidth / 2, 3 * canvasHeight / 4, 'rgba(255,255,255,0.1)');
+      drawText(aiPaddle.score.toString(), canvasWidth / 2, canvasHeight / 4, isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)');
+      drawText(userPaddle.score.toString(), canvasWidth / 2, 3 * canvasHeight / 4, isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)');
 
       // Draw Serve Prompt / Yellow Card
       if (gameStatus.isServing && gameStatus.currentServer === 'user') {
         if (gameStatus.showYellowCard) {
           drawText('🟨 黄牌警告: 发球超时', canvasWidth / 2, canvasHeight / 2 - 20, '#eab308', 'center', 'middle', 24);
         }
-        drawText('点击对方区域发球', canvasWidth / 2, canvasHeight / 2 + 30, 'rgba(255,255,255,0.7)', 'center', 'middle', 18);
+        drawText('点击对方区域发球', canvasWidth / 2, canvasHeight / 2 + 30, isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)', 'center', 'middle', 18);
       }
     };
 
@@ -413,44 +414,44 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
   }, [playerKey, gameOver, playerName]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#020617]/98 flex flex-col items-center justify-center p-2 sm:p-4 backdrop-blur-xl">
+    <div className={`fixed inset-0 z-50 ${isDarkMode ? 'bg-[#020617]/98' : 'bg-white/95'} flex flex-col items-center justify-center p-2 sm:p-4 backdrop-blur-xl transition-colors duration-500`}>
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
         <button
           onClick={onClose}
-          className="p-3 bg-slate-800/80 hover:bg-slate-700 rounded-full text-slate-200 transition-colors border border-white/10 shadow-lg"
+          className={`p-3 ${isDarkMode ? 'bg-slate-800/80 hover:bg-slate-700 text-slate-200' : 'bg-slate-200/80 hover:bg-slate-300 text-slate-800'} rounded-full transition-colors border border-card-border shadow-lg`}
         >
           <X className="w-6 h-6" />
         </button>
       </div>
 
       <div className="text-center mb-4 sm:mb-6 w-full max-w-[400px] px-2">
-        <h2 className="text-xl sm:text-2xl font-black italic tracking-wider text-white flex items-center justify-center gap-3">
+        <h2 className={`text-xl sm:text-2xl font-black italic tracking-wider ${isDarkMode ? 'text-white' : 'text-slate-900'} flex items-center justify-center gap-3`}>
           <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-red-500 animate-pulse" />
           切磋模式 vs {playerName}
         </h2>
-        <div className="flex justify-between mt-3 sm:mt-4 text-slate-400 font-mono text-lg sm:text-xl bg-slate-900/80 p-2 sm:p-3 rounded-2xl border border-white/5 shadow-2xl">
+        <div className={`flex justify-between mt-3 sm:mt-4 ${isDarkMode ? 'text-slate-400 bg-slate-900/80' : 'text-slate-600 bg-white/80'} font-mono text-lg sm:text-xl p-2 sm:p-3 rounded-2xl border border-card-border shadow-2xl transition-colors`}>
           <div className="flex flex-col items-start px-2">
-            <span className="text-[10px] uppercase tracking-widest text-slate-500">AI Score</span>
+            <span className={`text-[10px] uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>AI Score</span>
             <span className="text-red-500 font-black">{score.ai}</span>
           </div>
-          <div className="flex items-center text-slate-600 text-xs sm:text-sm">
+          <div className={`flex items-center ${isDarkMode ? 'text-slate-600' : 'text-slate-400'} text-xs sm:text-sm`}>
             11 POINTS
           </div>
           <div className="flex flex-col items-end px-2">
-            <span className="text-[10px] uppercase tracking-widest text-slate-500">Your Score</span>
+            <span className={`text-[10px] uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Your Score</span>
             <span className="text-blue-500 font-black">{score.user}</span>
           </div>
         </div>
       </div>
 
-      <div className="relative shadow-[0_0_50px_rgba(30,58,138,0.3)] rounded-2xl overflow-hidden border-2 border-slate-700/50 bg-black touch-none w-full max-w-[400px] aspect-[4/5] flex items-center justify-center">
+      <div className={`relative shadow-[0_0_50px_rgba(30,58,138,${isDarkMode ? '0.3' : '0.1'})] rounded-2xl overflow-hidden border-2 ${isDarkMode ? 'border-slate-700/50 bg-black' : 'border-slate-200 bg-slate-50'} touch-none w-full max-w-[400px] aspect-[4/5] flex items-center justify-center transition-colors`}>
         {gameOver && (
-          <div className="absolute inset-0 bg-slate-950/90 flex items-center justify-center flex-col z-20 backdrop-blur-md p-6 text-center">
-            <Trophy className={`w-16 h-16 mb-4 ${winner.includes('赢') ? 'text-yellow-400 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]' : 'text-slate-500'}`} />
-            <h3 className="text-3xl font-black bg-gradient-to-br from-white to-slate-400 bg-clip-text text-transparent mb-2 italic">
+          <div className={`absolute inset-0 ${isDarkMode ? 'bg-slate-950/90' : 'bg-white/90'} flex items-center justify-center flex-col z-20 backdrop-blur-md p-6 text-center`}>
+            <Trophy className={`w-16 h-16 mb-4 ${winner.includes('赢') ? 'text-yellow-400 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]' : (isDarkMode ? 'text-slate-500' : 'text-slate-300')}`} />
+            <h3 className={`text-3xl font-black ${isDarkMode ? 'bg-gradient-to-br from-white to-slate-400' : 'bg-gradient-to-br from-slate-900 to-slate-500'} bg-clip-text text-transparent mb-2 italic`}>
               {winner}
             </h3>
-            <p className="text-slate-400 text-sm mb-8">
+            <p className={`${isDarkMode ? 'text-slate-400' : 'text-slate-600'} text-sm mb-8 font-medium`}>
               {winner.includes('赢') ? `成功战胜了顶级国乒冠军 ${playerName}！` : `惜败于 ${playerName}，再接再厉！`}
             </p>
             <button
@@ -459,7 +460,7 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
                 setGameOver(false);
                 setWinner('');
               }}
-              className="w-full max-w-[200px] px-8 py-4 bg-white text-black hover:bg-blue-50 font-black rounded-xl transition-all shadow-xl active:scale-95"
+              className={`w-full max-w-[200px] px-8 py-4 ${isDarkMode ? 'bg-white text-black hover:bg-blue-50' : 'bg-slate-900 text-white hover:bg-slate-800'} font-black rounded-xl transition-all shadow-xl active:scale-95`}
             >
               继续切磋
             </button>
@@ -472,15 +473,15 @@ export default function PongGame({ playerKey, playerName, onClose }: PongGamePro
           className="w-full h-full block select-none touch-none"
         />
         {!gameOver && !isServing && (
-          <div className="absolute top-4 left-0 w-full text-center pointer-events-none opacity-20 text-[10px] text-white tracking-[0.2em] font-mono">
+          <div className={`absolute top-4 left-0 w-full text-center pointer-events-none opacity-20 text-[10px] ${isDarkMode ? 'text-white' : 'text-black'} tracking-[0.2em] font-mono`}>
             PONG MASTER AI SYSTEM v1.0
           </div>
         )}
       </div>
       
       <div className="mt-6 flex flex-col items-center gap-1 opacity-40 pointer-events-none">
-        <p className="text-[10px] text-white font-medium text-center">滑动底端控制球拍 · 点击对方半区发球</p>
-        <p className="text-[8px] text-slate-500 uppercase tracking-tighter">Responsive Game Interface</p>
+        <p className={`text-[10px] ${isDarkMode ? 'text-white font-medium' : 'text-black font-bold'} text-center`}>滑动底端控制球拍 · 点击对方半区发球</p>
+        <p className={`text-[8px] ${isDarkMode ? 'text-slate-500' : 'text-slate-400'} uppercase tracking-tighter`}>Responsive Game Interface</p>
       </div>
     </div>
   );
