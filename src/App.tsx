@@ -1,20 +1,30 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, User, ChevronRight, ChevronLeft, Activity, Zap, Shield, Target, X, Trophy, Info, Image as ImageIcon, MessageSquare, MessageSquareOff, PlayCircle, Sun, Moon } from "lucide-react";
+import { Send, User, ChevronRight, ChevronLeft, Activity, Zap, Shield, Target, X, Trophy, Info, Image as ImageIcon, MessageSquare, MessageSquareOff, PlayCircle, Sun, Moon, Globe, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import PongGame from "./components/PongGame";
 
-const PLAYERS: Record<string, { name: string; title: string; image: string; color: string; description: string; achievements: string[]; gallery: string[]; videoId: string; }> = {
+const PLAYERS: Record<string, { name: string; title: string; image: string; color: string; description: { zh: string, en: string }; achievements: { zh: string[], en: string[] }; gallery: string[]; videoId: string; }> = {
   ma_long: {
     name: "马龙",
     title: "六边形战士 (Hexagon Warrior)",
     image: "https://bkimg.cdn.bcebos.com/pic/0e2442a7d933c895d143cd6ba04a64f082025aafaad0?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
     color: "from-red-600/20 to-orange-600/20",
-    description: "马龙是世界乒乓球历史上最伟大的运动员之一，首位集奥运会、世锦赛、世界杯、亚运会、亚锦赛、亚洲杯、巡回赛总决赛、全运会单打冠军于一身的超级全满贯男子选手。他的技术全面，正手杀伤力极大，战术素养极高。",
-    achievements: [
-      "2届奥运会男单冠军 (2016, 2020)",
-      "3届世乒赛男单冠军 (2015, 2017, 2019)",
-      "首位男子双圈大满贯得主"
-    ],
+    description: { 
+      zh: "马龙是世界乒乓球历史上最伟大的运动员之一，首位集奥运会、世锦赛、世界杯、亚运会、亚锦赛、亚洲杯、巡回赛总决赛、全运会单打冠军于一身的超级全满贯男子选手。他的技术全面，正手杀伤力极大，战术素养极高。",
+      en: "Ma Long is one of the greatest table tennis players in history. He is the first male 'Super Grand Slam' winner to collect titles across all major tournaments. His technique is comprehensive with a devastating forehand and supreme tactical game."
+    },
+    achievements: {
+      zh: [
+        "2届奥运会男单冠军 (2016, 2020)",
+        "3届世乒赛男单冠军 (2015, 2017, 2019)",
+        "首位男子双圈大满贯得主"
+      ],
+      en: [
+        "2x Olympic Men's Singles Gold (2016, 2020)",
+        "3x World Champ Men's Singles (2015, 2017, 2019)",
+        "First Male Double Grand Slam Winner"
+      ]
+    },
     gallery: [
       "https://bkimg.cdn.bcebos.com/pic/b03533fa828ba61ea8d336d28c6c800a304e241ff38f?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
       "https://bkimg.cdn.bcebos.com/pic/8cb1cb1349540923dd54fc104c00c609b3de9c82e31e?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
@@ -27,12 +37,22 @@ const PLAYERS: Record<string, { name: string; title: string; image: string; colo
     title: "暴力熊猫 (Little Fatty)",
     image: "https://bkimg.cdn.bcebos.com/pic/cf1b9d16fdfaaf51f3de68f5170d83eef01f3a29cc7d?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
     color: "from-blue-600/20 to-indigo-600/20",
-    description: "樊振东以其极具破坏力的反手拧拉和惊人的中远台相持能力闻名世界。他的球风硬朗，击球质量极高，被誉为国乒新生代的绝对主力。",
-    achievements: [
-      "世乒赛男单冠军 (2021, 2023)",
-      "4次世界杯男单冠军",
-      "单打奥运会冠军 (2024)"
-    ],
+    description: {
+      zh: "樊振东以其极具破坏力的反手拧拉和惊人的中远台相持能力闻名世界。他的球风硬朗，击球质量极高，被誉为国乒新生代的绝对主力。",
+      en: "Fan Zhendong is world-renowned for his devastating backhand flick and astonishing mid-to-far table rallying abilities. With a tough playing style and extremely high stroke quality, he is the absolute core of the new generation."
+    },
+    achievements: {
+      zh: [
+        "世乒赛男单冠军 (2021, 2023)",
+        "4次世界杯男单冠军",
+        "单打奥运会冠军 (2024)"
+      ],
+      en: [
+        "World Champ Men's Singles (2021, 2023)",
+        "4x World Cup Men's Singles Champion",
+        "Olympics Men's Singles Gold (2024)"
+      ]
+    },
     gallery: [
       "https://bkimg.cdn.bcebos.com/pic/80cb39dbb6fd52668ac488fbaa18972bd5073675?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
       "https://bkimg.cdn.bcebos.com/pic/faedab64034f78f0f736d9831e691d55b319ebc4b631?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
@@ -45,12 +65,22 @@ const PLAYERS: Record<string, { name: string; title: string; image: string; colo
     title: "藏獒 (Imperial Tiger)",
     image: "https://bkimg.cdn.bcebos.com/pic/0b7b02087bf40ad18b8cc3635d2c11dfa8eccec2?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
     color: "from-zinc-100/20 to-zinc-400/20",
-    description: "张继科创造了445天最快大满贯的历史纪录。他的反手接发球霸王拧极具侵略性，心理素质极强，比赛中经常展现出“藏獒”般的血性。",
-    achievements: [
-      "445天最快大满贯纪录保持者",
-      "奥运会男单冠军 (2012)",
-      "2届世乒赛男单冠军 (2011, 2013)"
-    ],
+    description: {
+      zh: "张继科创造了445天最快大满贯的历史纪录。他的反手接发球霸王拧极具侵略性，心理素质极强，比赛中经常展现出“藏獒”般的血性。",
+      en: "Zhang Jike holds the record for the fastest Grand Slam in 445 days. His backhand 'overlord flick' receive is highly aggressive. With intense mental fortitude, he often displays 'tiger-like' bloodlust in matches."
+    },
+    achievements: {
+      zh: [
+        "445天最快大满贯纪录保持者",
+        "奥运会男单冠军 (2012)",
+        "2届世乒赛男单冠军 (2011, 2013)"
+      ],
+      en: [
+        "Record holder for 445-day fastest Grand Slam",
+        "Olympics Men's Singles Gold (2012)",
+        "2x World Champ Men's Singles (2011, 2013)"
+      ]
+    },
     gallery: [
       "https://bkimg.cdn.bcebos.com/pic/b21bb051f8198618f453982b42ed2e738bd4e60d?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
       "https://bkimg.cdn.bcebos.com/pic/d62a6059252dd42a283471faf7634cb5c9ea15ce1213?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
@@ -63,12 +93,22 @@ const PLAYERS: Record<string, { name: string; title: string; image: string; colo
     title: "人民艺术家 (X-Man)",
     image: "https://bkimg.cdn.bcebos.com/pic/e7cd7b899e510fb30f24f5c1cf6adf95d143ad4ba616?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
     color: "from-green-600/20 to-emerald-600/20",
-    description: "许昕是当今乒坛极少数打到顶尖水平的直板选手之一。他拥有世界级正手爆冲能力、极大的跑动范围和出神入化的台内手感，常常打出令人惊叹的神仙球。",
-    achievements: [
-      "2届奥运会男团冠军 (2016, 2020)",
-      "20次国际乒联巡回赛单打冠军",
-      "多届世乒赛双打/混双冠军"
-    ],
+    description: {
+      zh: "许昕是当今乒坛极少数打到顶尖水平的直板选手之一。他拥有世界级正手爆冲能力、极大的跑动范围和出神入化的台内手感，常常打出令人惊叹的神仙球。",
+      en: "Xu Xin is one of the very few modern penholders playing at the very top. Featuring world-class forehand capability, extreme court coverage, and magical touch over the table, he frequently hits jaw-dropping 'god-mode' shots."
+    },
+    achievements: {
+      zh: [
+        "2届奥运会男团冠军 (2016, 2020)",
+        "20次国际乒联巡回赛单打冠军",
+        "多届世乒赛双打/混双冠军"
+      ],
+      en: [
+        "2x Olympics Men's Team Gold (2016, 2020)",
+        "20x ITTF Pro Tour Singles Titles",
+        "Multiple World Champ Doubles/Mixed Golds"
+      ]
+    },
     gallery: [
       "https://bkimg.cdn.bcebos.com/pic/caef76094b36acaf2edde4ab6a809a1001e939013669?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
       "https://bkimg.cdn.bcebos.com/pic/908fa0ec08fa513d543eebf2306d55fbb2fbd902?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
@@ -81,12 +121,22 @@ const PLAYERS: Record<string, { name: string; title: string; image: string; colo
     title: "大头 (Big Head)",
     image: "https://bkimg.cdn.bcebos.com/pic/0d338744ebf81a4c510fef562a737759252dd52a08a0?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
     color: "from-purple-600/20 to-pink-600/20",
-    description: "王楚钦是目前世界排名第一的男单选手。作为左手将，他的打法非常现代，速度极快，衔接流畅，正反手实力均衡且极具杀伤力。",
-    achievements: [
-      "亚运会男单冠军 (2022)",
-      "多届世乒赛男团冠军",
-      "世乒赛男双、混双冠军"
-    ],
+    description: {
+      zh: "王楚钦是目前世界排名第一的男单选手。作为左手将，他的打法非常现代，速度极快，衔接流畅，正反手实力均衡且极具杀伤力。",
+      en: "Wang Chuqin is currently the world No. 1 men's singles player. As a left-hander, his modern style is lightning fast with smooth transitions, possessing balanced and highly lethal power on both wings."
+    },
+    achievements: {
+      zh: [
+        "亚运会男单冠军 (2022)",
+        "多届世乒赛男团冠军",
+        "世乒赛男双、混双冠军"
+      ],
+      en: [
+        "Asian Games Men's Singles Champion (2022)",
+        "Multiple World Champ Men's Team Golds",
+        "World Champ Men's Doubles & Mixed Golds"
+      ]
+    },
     gallery: [
       "https://bkimg.cdn.bcebos.com/pic/4610b912c8fcc3cec3fd83f4a01ec188d43f86948afb?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
       "https://bkimg.cdn.bcebos.com/pic/00e93901213fb80e7bec671b048a382eb9389a503efe?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
@@ -99,12 +149,22 @@ const PLAYERS: Record<string, { name: string; title: string; image: string; colo
     title: "小魔王 (Little Demon King)",
     image: "https://bkimg.cdn.bcebos.com/pic/562c11dfa9ec8a136327f3867754868fa0ec08fa6a07?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
     color: "from-yellow-500/20 to-orange-500/20",
-    description: "孙颖莎是目前世界排名第一的女单选手。她的技术特点鲜明，正手攻击性极强，具备“女子技术男性化”的特点，且在关键时刻拥有一颗大心脏。",
-    achievements: [
-      "世乒赛女单冠军 (2023)",
-      "奥运会女团冠军 (2020)",
-      "亚运会女单冠军 (2022)"
-    ],
+    description: {
+      zh: "孙颖莎是目前世界排名第一的女单选手。她的技术特点鲜明，正手攻击性极强，具备“女子技术男性化”的特点，且在关键时刻拥有一颗大心脏。",
+      en: "Sun Yingsha is currently the world No. 1 women's singles player. Distinctive for her male-style aggressive forehand loops and displaying immense clutch capability under pressure."
+    },
+    achievements: {
+      zh: [
+        "世乒赛女单冠军 (2023)",
+        "奥运会女团冠军 (2020)",
+        "亚运会女单冠军 (2022)"
+      ],
+      en: [
+        "World Champ Women's Singles (2023)",
+        "Olympics Women's Team Gold (2020)",
+        "Asian Games Women's Singles Champion (2022)"
+      ]
+    },
     gallery: [
       "https://bkimg.cdn.bcebos.com/pic/dcc451da81cb39dbdcf137c5db160924ab18306b?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
       "https://bkimg.cdn.bcebos.com/pic/9d82d158ccbf6c81473fc17ab73eb13533fa401c?x-bce-process=image/resize,m_lfit,w_1000,limit_1",
@@ -112,6 +172,79 @@ const PLAYERS: Record<string, { name: string; title: string; image: string; colo
     ],
     videoId: "BV1YUSDBxETS"
   },
+};
+
+const TRANSLATIONS = {
+  zh: {
+    subtitle: "向顶级冠军请教技术、战术与心态",
+    lightMode: "切换到浅色模式",
+    darkMode: "切换到深色模式",
+    switchLangTips: "Switch to English",
+    langCode: "EN",
+    showChat: "显示对话框",
+    hideChat: "隐藏对话框",
+    welcomeDesc: "描述你遇到的问题，系统会自动匹配最擅长该技术的国乒冠军为你解答。",
+    sugg1Text: "我的反手拧拉总是吃旋转，起不来下旋球怎么办？",
+    sugg1Label: "反手拧拉技巧",
+    sugg2Text: "正手拉加转弧圈球总是发不上力，身体不够协调。",
+    sugg2Label: "正手爆冲发力",
+    sugg3Text: "比赛到了决胜局关键分，总是不敢出手，怎么练心态？",
+    sugg3Label: "决胜局心理素质",
+    insight: "的见解",
+    trajectory: "动作轨迹",
+    keyPoints: "核心要点",
+    profile: "球员自传 Profile",
+    honors: "巅峰荣誉 Honors",
+    video: "实战演示 Video Demo",
+    gallery: "场外风采 Gallery",
+    challenge: "立即切磋挑战",
+    closeDetail: "点击背景或此处关闭详情",
+    selectCoach: "想请教谁? Select",
+    selectedCoach: "已选 {n} 位名师",
+    autoMatch: "自动匹配",
+    single: "单人",
+    multi: "多人",
+    consult: "咨询",
+    placeholderBase: "提问：正手拉下旋球老是下网怎么办？",
+    footer: "PONG MASTER AI - 由 通义千问 (Qwen-Turbo) 驱动的战术分析系统",
+    unknownPlayer: "神秘名将",
+    playerTitle: "导师"
+  },
+  en: {
+    subtitle: "Ask top champions about technique, tactics, and mindset",
+    lightMode: "Switch to Light Mode",
+    darkMode: "Switch to Dark Mode",
+    switchLangTips: "切换到中文",
+    langCode: "ZH",
+    showChat: "Show Chat",
+    hideChat: "Hide Chat",
+    welcomeDesc: "Describe your problem, and the system matches the best champion answering you.",
+    sugg1Text: "My backhand flick always eats spin, how can I lift underspin balls?",
+    sugg1Label: "Backhand Flick",
+    sugg2Text: "I can't generate power when playing forehand topspin, uncoordinated.",
+    sugg2Label: "Forehand Power",
+    sugg3Text: "At deciding points, I'm afraid to execute. How to train mindset?",
+    sugg3Label: "Deciding Mindset",
+    insight: "'s Insight",
+    trajectory: "Action Trajectory",
+    keyPoints: "Key Points",
+    profile: "Player Profile",
+    honors: "Peak Honors",
+    video: "Video Demo",
+    gallery: "Off-court Gallery",
+    challenge: "Challenge Now",
+    closeDetail: "Tap here or background to close",
+    selectCoach: "Select",
+    selectedCoach: "Selected: {n}",
+    autoMatch: "Auto",
+    single: "Single",
+    multi: "Multi",
+    consult: "Consult",
+    placeholderBase: "Ask: My forehand topspin against underspin always hits the net...",
+    footer: "PONG MASTER AI - Tactical Analysis System Driven by Qwen-Turbo",
+    unknownPlayer: "Unknown Master",
+    playerTitle: "Coach"
+  }
 };
 
 interface AnswerDetails {
@@ -138,9 +271,12 @@ export default function App() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [language, setLanguage] = useState<'zh' | 'en'>('zh');
+  const t = TRANSLATIONS[language];
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [isInputHidden, setIsInputHidden] = useState(false);
   const [isHeaderAvatarsExpanded, setIsHeaderAvatarsExpanded] = useState(false);
+  const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
   const [isBottomAvatarsExpanded, setIsBottomAvatarsExpanded] = useState(false);
   const [playingGameId, setPlayingGameId] = useState<string | null>(null);
   const [selectedChatPlayerIds, setSelectedChatPlayerIds] = useState<string[]>([]);
@@ -270,32 +406,64 @@ export default function App() {
       <div className="stadium-glow"></div>
 
       {/* Header */}
-      <header className="flex-none p-6 border-b border-card-border glass-card shrink-0 z-10 m-4 mb-0 relative overflow-hidden">
+      <header className="flex-none p-3 sm:p-6 border-b border-card-border glass-card shrink-0 z-10 m-2 sm:m-4 mb-0 relative overflow-hidden">
         <div className="absolute inset-0 opacity-20 pointer-events-none">
           <div className="absolute top-0 right-10 w-64 h-64 bg-emerald-600 rounded-full blur-[100px]" />
           <div className="absolute -bottom-10 left-10 w-48 h-48 bg-blue-600 rounded-full blur-[80px]" />
         </div>
-        <div className="max-w-4xl mx-auto flex items-center justify-between relative gap-2">
-          <div className="shrink-1 min-w-0">
-            <h1 className="text-base sm:text-2xl font-bold tracking-wider mb-0.5 sm:mb-1 flex items-center gap-2 sm:gap-3 text-blue-400">
-              <Target className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 shrink-0" />
+        <div className="max-w-4xl mx-auto flex items-center justify-between relative gap-1 sm:gap-2">
+          <div className="flex-1 min-w-0 pr-1">
+            <h1 className="text-[13px] sm:text-2xl font-bold tracking-wider mb-0.5 sm:mb-1 flex items-center gap-1 sm:gap-3 text-blue-400">
+              <Target className="w-4 h-4 sm:w-6 sm:h-6 text-blue-500 shrink-0" />
               <span className="truncate">PONG MASTER AI</span>
             </h1>
-            <p className="text-muted-text text-[10px] sm:text-sm italic truncate">向顶级冠军请教技术、战术与心态</p>
+            <p className="text-muted-text text-[9px] sm:text-sm italic leading-tight sm:leading-normal line-clamp-2">{t.subtitle}</p>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4 justify-end shrink-0">
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-1 px-2 sm:p-2 sm:px-2 rounded-full glass-card hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-300 text-muted-text hover:text-blue-500 border border-card-border flex items-center gap-1.5"
-              title={isDarkMode ? "切换到浅色模式" : "切换到深色模式"}
+          <div className="flex items-center gap-1.5 sm:gap-4 justify-end shrink-0">
+            <div 
+              className="flex items-center relative"
+              onMouseEnter={() => setIsSettingsExpanded(true)}
+              onMouseLeave={() => setIsSettingsExpanded(false)}
             >
-              {isDarkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500" />}
-              <span className="text-[10px] hidden sm:inline uppercase tracking-tighter font-bold">{isDarkMode ? 'Light' : 'Dark'}</span>
-            </button>
+              <AnimatePresence>
+                {isSettingsExpanded && (
+                  <motion.div 
+                    initial={{ width: 0, opacity: 0, marginRight: 0 }}
+                    animate={{ width: "auto", opacity: 1, marginRight: 8 }}
+                    exit={{ width: 0, opacity: 0, marginRight: 0 }}
+                    className="flex items-center gap-2 overflow-hidden"
+                  >
+                    <button
+                      onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')}
+                      className="p-1 px-2 sm:p-2 sm:px-2 rounded-full glass-card hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-300 text-muted-text hover:text-blue-500 border border-card-border flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                      title={t.switchLangTips}
+                    >
+                      <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+                      <span className="text-[10px] hidden sm:inline uppercase tracking-tighter font-bold">{t.langCode}</span>
+                    </button>
+                    <button
+                      onClick={() => setIsDarkMode(!isDarkMode)}
+                      className="p-1 px-2 sm:p-2 sm:px-2 rounded-full glass-card hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-300 text-muted-text hover:text-blue-500 border border-card-border flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                      title={isDarkMode ? t.lightMode : t.darkMode}
+                    >
+                      {isDarkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500" />}
+                      <span className="text-[10px] hidden sm:inline uppercase tracking-tighter font-bold">{isDarkMode ? 'Light' : 'Dark'}</span>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <button
+                onClick={() => setIsSettingsExpanded(!isSettingsExpanded)}
+                className={`p-1 px-2 sm:p-2 sm:px-2 rounded-full glass-card hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-300 border border-card-border flex items-center gap-1.5 z-10 ${isSettingsExpanded ? 'text-blue-500 bg-black/5 dark:bg-white/5' : 'text-muted-text'}`}
+                title="Settings"
+              >
+                <Settings className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 ${isSettingsExpanded ? 'rotate-90' : ''}`} />
+              </button>
+            </div>
             <button
               onClick={() => setIsInputHidden(!isInputHidden)}
               className={`p-1 px-2 sm:p-2 sm:px-2 rounded-full glass-card transition-all duration-300 shrink-0 flex items-center gap-1.5 border ${!isInputHidden ? 'bg-blue-600/20 border-blue-500/50 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'bg-transparent border-card-border text-muted-text hover:text-foreground'}`}
-              title={isInputHidden ? "显示对话框" : "隐藏对话框"}
+              title={isInputHidden ? t.showChat : t.hideChat}
             >
               <MessageSquare className={`w-4 h-4 sm:w-5 sm:h-5 ${!isInputHidden ? 'text-blue-500' : 'text-muted-text'}`} />
               <span className={`text-[10px] hidden sm:inline uppercase tracking-tighter font-bold ${!isInputHidden ? 'text-blue-500' : 'text-muted-text'}`}>Chat</span>
@@ -350,17 +518,17 @@ export default function App() {
               </div>
               <h2 className="text-xl sm:text-2xl font-bold tracking-wider text-blue-400 mb-3">PONG MASTER AI</h2>
               <p className="text-muted-text max-w-md mx-auto mb-8 text-sm italic">
-                描述你遇到的问题，系统会自动匹配最擅长该技术的国乒冠军为你解答。
+                {t.welcomeDesc}
               </p>
               <div className="flex sm:flex-wrap items-center justify-start sm:justify-center gap-3 overflow-x-auto sm:overflow-x-visible pb-4 sm:pb-0 px-4 sm:px-0 scrollbar-hide no-scrollbar -mx-4 sm:mx-0">
-                <button onClick={() => handleSuggestionClick("我的反手拧拉总是吃旋转，起不来下旋球怎么办？")} className="whitespace-nowrap px-4 py-2 glass-card hover:bg-card-bg rounded-full text-xs sm:text-sm transition-colors text-muted-text hover:text-foreground shrink-0">
-                  反手拧拉技巧
+                <button onClick={() => handleSuggestionClick(t.sugg1Text)} className="whitespace-nowrap px-4 py-2 glass-card hover:bg-card-bg rounded-full text-xs sm:text-sm transition-colors text-muted-text hover:text-foreground shrink-0">
+                  {t.sugg1Label}
                 </button>
-                <button onClick={() => handleSuggestionClick("正手拉加转弧圈球总是发不上力，身体不够协调。")} className="whitespace-nowrap px-4 py-2 glass-card hover:bg-card-bg rounded-full text-xs sm:text-sm transition-colors text-muted-text hover:text-foreground shrink-0">
-                  正手爆冲发力
+                <button onClick={() => handleSuggestionClick(t.sugg2Text)} className="whitespace-nowrap px-4 py-2 glass-card hover:bg-card-bg rounded-full text-xs sm:text-sm transition-colors text-muted-text hover:text-foreground shrink-0">
+                  {t.sugg2Label}
                 </button>
-                <button onClick={() => handleSuggestionClick("比赛到了决胜局关键分，总是不敢出手，怎么练心态？")} className="whitespace-nowrap px-4 py-2 glass-card hover:bg-card-bg rounded-full text-xs sm:text-sm transition-colors text-muted-text hover:text-foreground shrink-0">
-                  决胜局心理素质
+                <button onClick={() => handleSuggestionClick(t.sugg3Text)} className="whitespace-nowrap px-4 py-2 glass-card hover:bg-card-bg rounded-full text-xs sm:text-sm transition-colors text-muted-text hover:text-foreground shrink-0">
+                  {t.sugg3Label}
                 </button>
               </div>
             </div>
@@ -413,10 +581,10 @@ export default function App() {
                                   <div className="min-w-0 flex-1">
                                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                                       <h3 className="text-base sm:text-xl font-bold tracking-tight uppercase italic text-foreground truncate pr-2 py-1">
-                                        {PLAYERS[detail.playerId]?.name || "神秘名将"}
+                                        {PLAYERS[detail.playerId]?.name || t.unknownPlayer}
                                       </h3>
                                       <span className="badge-gold self-start sm:self-auto px-1.5 py-0.5 leading-none">
-                                        {PLAYERS[detail.playerId]?.title.split('(')[0].trim() || "导师"}
+                                        {PLAYERS[detail.playerId]?.title.split('(')[language === 'en' ? 1 : 0]?.replace(')', '')?.trim() || t.playerTitle}
                                       </span>
                                     </div>
                                     <p className="text-muted-text italic mt-1 font-serif text-[10px] sm:text-sm line-clamp-1 sm:line-clamp-2">
@@ -430,7 +598,7 @@ export default function App() {
                                   <div className="glass-card p-4 sm:p-6 border-l-2 sm:border-l-4 border-l-amber-500 border-card-border shadow-sm transition-all hover:bg-card-bg/10">
                                     <h4 className="flex items-center gap-2 font-bold mb-2 sm:mb-4 text-amber-500 tracking-widest text-[9px] sm:text-xs uppercase">
                                       <Activity className="w-3 h-3 sm:w-4 sm:h-4" />
-                                      {PLAYERS[detail.playerId]?.name} 的见解
+                                      {PLAYERS[detail.playerId]?.name}{t.insight}
                                     </h4>
                                     <p className="leading-relaxed text-foreground text-xs sm:text-base">
                                       {detail.tacticalAdvice}
@@ -442,7 +610,7 @@ export default function App() {
                                       <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-transparent pointer-events-none" />
                                       <h4 className="flex items-center gap-2 font-bold mb-2 sm:mb-4 text-slate-500 text-[9px] sm:text-xs uppercase">
                                         <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
-                                        动作轨迹
+                                        {t.trajectory}
                                       </h4>
                                       <p className="text-[11px] sm:text-sm leading-relaxed text-muted-text relative z-10">
                                         {detail.actionDemonstration}
@@ -452,7 +620,7 @@ export default function App() {
                                     <div className="glass-card p-4 sm:p-6 bg-card-bg/20 hover:bg-card-bg/40 transition-colors shadow-inner border-card-border">
                                       <h4 className="flex items-center gap-2 font-bold mb-2 sm:mb-4 text-blue-400 text-[9px] sm:text-xs uppercase">
                                         <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
-                                        核心要点
+                                        {t.keyPoints}
                                       </h4>
                                       <ul className="space-y-1.5 sm:space-y-3">
                                         {detail.focusPoints.map((point, idx) => (
@@ -548,18 +716,18 @@ export default function App() {
                         {PLAYERS[selectedPlayerId].name}
                       </h2>
                       <span className="badge-gold self-center sm:self-auto py-0.5 sm:py-1 px-2 sm:px-3 glass-card bg-amber-500/10 border-amber-500/40 text-amber-500 text-[9px] sm:text-xs">
-                        {PLAYERS[selectedPlayerId].title}
+                        {PLAYERS[selectedPlayerId].title.split('(')[language === 'en' ? 1 : 0]?.replace(')', '')?.trim()}
                       </span>
                     </div>
                     <p className="text-muted-text text-[11px] sm:text-sm max-w-lg line-clamp-1 sm:line-clamp-2 italic mb-3 sm:mb-4">
-                      {PLAYERS[selectedPlayerId].description.split('。')[0]}。
+                      {PLAYERS[selectedPlayerId].description[language].split(language === 'zh' ? '。' : '.')[0]}{(language === 'zh' ? '。' : '.')}
                     </p>
                     <button
                       onClick={() => setPlayingGameId(selectedPlayerId)}
                       className="px-6 sm:px-8 py-2 sm:py-2.5 bg-red-600 hover:bg-red-500 text-white text-xs sm:text-sm font-black rounded-xl transition-all flex items-center justify-center gap-2 shadow-xl shadow-red-600/30 active:scale-95 group/btn mx-auto sm:mx-0 w-full sm:w-auto"
                     >
                       <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover/btn:animate-pulse" />
-                      立即切磋挑战
+                      {t.challenge}
                     </button>
                   </div>
                 </div>
@@ -573,20 +741,20 @@ export default function App() {
                     <section>
                       <h3 className="flex items-center gap-2 font-black text-blue-400 text-[10px] uppercase tracking-[0.2em] mb-4">
                         <Info className="w-4 h-4" />
-                        球员自传 Profile
+                        {t.profile}
                       </h3>
                       <div className="glass-card bg-card-bg p-5 border-card-border leading-relaxed text-muted-text text-sm italic font-serif">
-                        {PLAYERS[selectedPlayerId].description}
+                        {PLAYERS[selectedPlayerId].description[language]}
                       </div>
                     </section>
 
                     <section>
                       <h3 className="flex items-center gap-2 font-black text-amber-500 text-[10px] uppercase tracking-[0.2em] mb-4">
                         <Trophy className="w-4 h-4" />
-                        巅峰荣誉 Honors
+                        {t.honors}
                       </h3>
                       <div className="space-y-3">
-                        {PLAYERS[selectedPlayerId].achievements.map((ach, idx) => (
+                        {PLAYERS[selectedPlayerId].achievements[language].map((ach, idx) => (
                           <div key={idx} className="flex items-center gap-3 p-4 glass-card bg-gradient-to-r from-amber-500/5 to-transparent border-white/5 hover:border-amber-500/20 transition-colors group/honor">
                             <div className="w-8 h-8 shrink-0 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover/honor:scale-110 transition-transform">
                               <Trophy className="w-4 h-4 text-amber-500" />
@@ -604,7 +772,7 @@ export default function App() {
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="flex items-center gap-2 font-black text-red-500 text-[10px] uppercase tracking-[0.2em]">
                           <PlayCircle className="w-4 h-4" />
-                          实战演示 Video Demo
+                          {t.video}
                         </h3>
                         <span className="text-[9px] text-muted-text font-mono flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
@@ -628,7 +796,7 @@ export default function App() {
                     <section>
                       <h3 className="flex items-center gap-2 font-black text-emerald-400 text-[10px] uppercase tracking-[0.2em] mb-4">
                         <ImageIcon className="w-4 h-4" />
-                        场外风采 Gallery
+                        {t.gallery}
                       </h3>
                       <div className="grid grid-cols-3 gap-3">
                         {PLAYERS[selectedPlayerId].gallery.map((img, idx) => (
@@ -660,7 +828,7 @@ export default function App() {
                   onClick={() => setSelectedPlayerId(null)}
                   className="text-xs text-slate-500 font-bold uppercase tracking-widest"
                 >
-                  点击背景或此处关闭详情
+                  {t.closeDetail}
                 </button>
               </div>
             </motion.div>
@@ -688,7 +856,7 @@ export default function App() {
                     className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-text font-extrabold flex items-center gap-1.5 hover:text-foreground transition-colors group/label px-2 py-1 glass-card active:scale-95"
 >
                     <Target className={`w-3.5 h-3.5 transition-transform duration-300 ${isBottomAvatarsExpanded ? 'rotate-90 text-blue-500' : ''}`} /> 
-                    想请教谁? Select
+                    {t.selectCoach}
                     <ChevronRight className={`w-3 h-3 transition-transform duration-300 ${isBottomAvatarsExpanded ? 'rotate-90' : ''}`} />
                   </button>
                   {selectedChatPlayerIds.length > 0 && (
@@ -697,7 +865,7 @@ export default function App() {
                       animate={{ opacity: 1, x: 0 }}
                       className="flex items-center gap-1 text-[10px] bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20 font-medium"
                     >
-                      <span>已选 {selectedChatPlayerIds.length} 位名师</span>
+                      <span>{t.selectedCoach.replace('{n}', selectedChatPlayerIds.length.toString())}</span>
                       <button onClick={() => setSelectedChatPlayerIds([])} className="hover:text-blue-200 ml-1">
                         <X className="w-2.5 h-2.5" />
                       </button>
@@ -706,21 +874,21 @@ export default function App() {
                 </div>
                 {selectedChatPlayerIds.length === 0 && (
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-muted-text italic">自动匹配</span>
+                    <span className="text-[10px] text-muted-text italic">{t.autoMatch}</span>
                     <div className="flex bg-card-bg rounded-full p-0.5 border border-card-border shadow-inner">
                       <button 
                         type="button"
                         onClick={() => setAutoMatchMode('single')}
                         className={`px-2 py-0.5 text-[9px] rounded-full transition-all font-bold ${autoMatchMode === 'single' ? 'bg-blue-600 text-white shadow-lg' : 'text-muted-text hover:text-foreground'}`}
                       >
-                        单人
+                        {t.single}
                       </button>
                       <button 
                         type="button"
                         onClick={() => setAutoMatchMode('multi')}
                         className={`px-2 py-0.5 text-[9px] rounded-full transition-all font-bold ${autoMatchMode === 'multi' ? 'bg-blue-600 text-white shadow-lg' : 'text-muted-text hover:text-foreground'}`}
                       >
-                        多人
+                        {t.multi}
                       </button>
                     </div>
                   </div>
@@ -784,8 +952,8 @@ export default function App() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={selectedChatPlayerIds.length > 0 
-              ? `咨询 ${selectedChatPlayerIds.map(id => PLAYERS[id].name).join(' & ')}...` 
-              : "提问：正手拉下旋球老是下网怎么办？"}
+              ? `${t.consult} ${selectedChatPlayerIds.map(id => PLAYERS[id].name).join(' & ')}...` 
+              : t.placeholderBase}
             className="w-full glass-card bg-card-bg rounded-full px-6 py-4 pr-14 focus:outline-none focus:ring-1 focus:ring-blue-500/50 shadow-2xl backdrop-blur transition-all placeholder:text-muted-text text-foreground border border-card-border"
             disabled={isLoading}
           />
@@ -798,7 +966,7 @@ export default function App() {
           </button>
             </form>
             <p className="text-center text-xs text-muted-text mt-4 mb-2 italic">
-              PONG MASTER AI - 由 通义千问 (Qwen-Turbo) 驱动的战术分析系统
+              {t.footer}
             </p>
           </motion.div>
         )}
@@ -811,6 +979,7 @@ export default function App() {
           playerName={PLAYERS[playingGameId].name}
           onClose={() => setPlayingGameId(null)} 
           isDarkMode={isDarkMode}
+          language={language}
         />
       )}
 

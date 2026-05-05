@@ -6,9 +6,10 @@ interface PongGameProps {
   playerName: string;
   onClose: () => void;
   isDarkMode: boolean;
+  language: 'zh' | 'en';
 }
 
-export default function PongGame({ playerKey, playerName, onClose, isDarkMode }: PongGameProps) {
+export default function PongGame({ playerKey, playerName, onClose, isDarkMode, language }: PongGameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState({ user: 0, ai: 0 });
   const [gameOver, setGameOver] = useState(false);
@@ -313,10 +314,10 @@ export default function PongGame({ playerKey, playerName, onClose, isDarkMode }:
 
       // Win condition
       if (userPaddle.score >= 11 && userPaddle.score - aiPaddle.score >= 2) {
-        setWinner('你赢了！');
+        setWinner(language === 'en' ? 'You won!' : '你赢了！');
         setGameOver(true);
       } else if (aiPaddle.score >= 11 && aiPaddle.score - userPaddle.score >= 2) {
-        setWinner(`被${playerName}击败！`);
+        setWinner(language === 'en' ? `Defeated by ${playerName}!` : `被${playerName}击败！`);
         setGameOver(true);
       }
     };
@@ -348,9 +349,9 @@ export default function PongGame({ playerKey, playerName, onClose, isDarkMode }:
       // Draw Serve Prompt / Yellow Card
       if (gameStatus.isServing && gameStatus.currentServer === 'user') {
         if (gameStatus.showYellowCard) {
-          drawText('🟨 黄牌警告: 发球超时', canvasWidth / 2, canvasHeight / 2 - 20, '#eab308', 'center', 'middle', 24);
+          drawText(language === 'zh' ? '🟨 黄牌警告: 发球超时' : '🟨 Yellow Card: Serve Timeout', canvasWidth / 2, canvasHeight / 2 - 20, '#eab308', 'center', 'middle', 24);
         }
-        drawText('点击对方区域发球', canvasWidth / 2, canvasHeight / 2 + 30, isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)', 'center', 'middle', 18);
+        drawText(language === 'zh' ? '点击对方区域发球' : 'Click opponent side to serve', canvasWidth / 2, canvasHeight / 2 + 30, isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)', 'center', 'middle', 18);
       }
     };
 
@@ -425,9 +426,9 @@ export default function PongGame({ playerKey, playerName, onClose, isDarkMode }:
       </div>
 
       <div className="text-center mb-4 sm:mb-6 w-full max-w-[400px] px-2">
-        <h2 className={`text-xl sm:text-2xl font-black italic tracking-wider ${isDarkMode ? 'text-white' : 'text-slate-900'} flex items-center justify-center gap-3`}>
-          <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-red-500 animate-pulse" />
-          切磋模式 vs {playerName}
+        <h2 className={`text-lg sm:text-2xl font-black italic tracking-wider ${isDarkMode ? 'text-white' : 'text-slate-900'} flex items-center justify-center gap-2 sm:gap-3 leading-tight`}>
+          <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-red-500 animate-pulse shrink-0" />
+          <span className="truncate">{language === 'en' ? `Challenge vs ${playerName}` : `切磋模式 vs ${playerName}`}</span>
         </h2>
         <div className={`flex justify-between mt-3 sm:mt-4 ${isDarkMode ? 'text-slate-400 bg-slate-900/80' : 'text-slate-600 bg-white/80'} font-mono text-lg sm:text-xl p-2 sm:p-3 rounded-2xl border border-card-border shadow-2xl transition-colors`}>
           <div className="flex flex-col items-start px-2">
@@ -447,12 +448,14 @@ export default function PongGame({ playerKey, playerName, onClose, isDarkMode }:
       <div className={`relative shadow-[0_0_50px_rgba(30,58,138,${isDarkMode ? '0.3' : '0.1'})] rounded-2xl overflow-hidden border-2 ${isDarkMode ? 'border-slate-700/50 bg-black' : 'border-slate-200 bg-slate-50'} touch-none w-full max-w-[400px] aspect-[4/5] flex items-center justify-center transition-colors`}>
         {gameOver && (
           <div className={`absolute inset-0 ${isDarkMode ? 'bg-slate-950/90' : 'bg-white/90'} flex items-center justify-center flex-col z-20 backdrop-blur-md p-6 text-center`}>
-            <Trophy className={`w-16 h-16 mb-4 ${winner.includes('赢') ? 'text-yellow-400 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]' : (isDarkMode ? 'text-slate-500' : 'text-slate-300')}`} />
+            <Trophy className={`w-16 h-16 mb-4 ${winner.includes('赢') || winner.includes('won') ? 'text-yellow-400 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]' : (isDarkMode ? 'text-slate-500' : 'text-slate-300')}`} />
             <h3 className={`text-3xl font-black ${isDarkMode ? 'bg-gradient-to-br from-white to-slate-400' : 'bg-gradient-to-br from-slate-900 to-slate-500'} bg-clip-text text-transparent mb-2 italic`}>
               {winner}
             </h3>
             <p className={`${isDarkMode ? 'text-slate-400' : 'text-slate-600'} text-sm mb-8 font-medium`}>
-              {winner.includes('赢') ? `成功战胜了顶级国乒冠军 ${playerName}！` : `惜败于 ${playerName}，再接再厉！`}
+              {winner.includes('赢') || winner.includes('won') 
+                ? (language === 'zh' ? `成功战胜了顶级国乒冠军 ${playerName}！` : `Successfully defeated top champion ${playerName}!`) 
+                : (language === 'zh' ? `惜败于 ${playerName}，再接再厉！` : `Narrowly lost to ${playerName}, keep trying!`)}
             </p>
             <button
               onClick={() => {
@@ -462,7 +465,7 @@ export default function PongGame({ playerKey, playerName, onClose, isDarkMode }:
               }}
               className={`w-full max-w-[200px] px-8 py-4 ${isDarkMode ? 'bg-white text-black hover:bg-blue-50' : 'bg-slate-900 text-white hover:bg-slate-800'} font-black rounded-xl transition-all shadow-xl active:scale-95`}
             >
-              继续切磋
+              {language === 'zh' ? '继续切磋' : 'Play Again'}
             </button>
           </div>
         )}
@@ -480,7 +483,9 @@ export default function PongGame({ playerKey, playerName, onClose, isDarkMode }:
       </div>
       
       <div className="mt-6 flex flex-col items-center gap-1 opacity-40 pointer-events-none">
-        <p className={`text-[10px] ${isDarkMode ? 'text-white font-medium' : 'text-black font-bold'} text-center`}>滑动底端控制球拍 · 点击对方半区发球</p>
+        <p className={`text-[10px] ${isDarkMode ? 'text-white font-medium' : 'text-black font-bold'} text-center`}>
+          {language === 'zh' ? '滑动底端控制球拍 · 点击对方半区发球' : 'Slide bottom to control paddle · Click opponent area to serve'}
+        </p>
         <p className={`text-[8px] ${isDarkMode ? 'text-slate-500' : 'text-slate-400'} uppercase tracking-tighter`}>Responsive Game Interface</p>
       </div>
     </div>
